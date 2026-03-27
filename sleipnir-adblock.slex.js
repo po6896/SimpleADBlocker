@@ -8,13 +8,28 @@
 // @include     https://*
 // @exclude     about:*
 // @exclude     chrome://*
-// @version     1.0.0
+// @version     2.0.0
 // @require     jquery
 // @require     api
 // ==/UserScript==
 
 (function () {
   'use strict';
+
+  var hostname = location.hostname;
+
+  // ============================================================
+  // Utility: domain matching
+  // ============================================================
+
+  function matchDomain(pattern) {
+    if (hostname === pattern) return true;
+    // support wildcard suffix: ".yahoo.co.jp" matches "news.yahoo.co.jp"
+    if (pattern.charAt(0) === '.') {
+      return hostname.indexOf(pattern) === hostname.length - pattern.length;
+    }
+    return hostname.indexOf('.' + pattern) === hostname.length - pattern.length - 1;
+  }
 
   // ============================================================
   // SECTION 1: CSS Cosmetic Hiding (instant, no flicker)
@@ -83,8 +98,12 @@
     '._popIn_recommend_article_ad',
     '._popIn_recommend_ad_section_articles',
 
-    // --- Generic Ad IDs ---
-    '#ad', '#ads', '#Ad', '#AD', '#ADS',
+    // --- Short but high-confidence generic selectors ---
+    // #ad / .ad are IDs/classes: only match exact "ad" class, not "add" or "address"
+    '#ad', '#ads', '#AD',
+    '.ads', '.Ads', '.ADS',
+
+    // --- Generic Ad IDs (specific enough to be safe) ---
     '#ad-area', '#ad-banner', '#ad-box', '#ad-container',
     '#ad-frame', '#ad-header', '#ad-footer', '#ad-slot',
     '#adArea', '#adBottom', '#adBox', '#adContainer',
@@ -114,8 +133,7 @@
     '#googleAD', '#topAD', '#footerAD',
     '#upliftsquare',
 
-    // --- Generic Ad Classes ---
-    '.ad', '.ads', '.Ad', '.Ads', '.ADS',
+    // --- Generic Ad Classes (sufficiently specific) ---
     '.ad-area', '.ad-banner', '.ad-block', '.ad-body', '.ad-box',
     '.ad-container', '.ad-footer', '.ad-frame', '.ad-header',
     '.ad-holder', '.ad-label', '.ad-placement', '.ad-slot',
@@ -159,18 +177,21 @@
     '.sponsor-post', '.sponsorPost',
     '.content_ad', '.contentad', '.content-ad', '.contentAd',
     '.content-ad-container', '.content-ads', '.contentAds',
-    '.promotion', '.sponsored', '.sponsor', '.sponsor_link',
-    '.pr', '.prTitle', '.PR-txt', '.prtext',
     '.revcontent-wrap',
 
-    // --- Banner ---
-    '.banner', '.bnr', '.bnrs', '.bnrBb', '.bnSuper',
-    '.ad-rectangle-banner',
+    // --- Sponsored context (safe: always ad-related in practice) ---
+    '.sponsored', '.sponsor_link',
+
+    // --- Banner classes (ad-specific only, not bare .banner) ---
+    '.ad-rectangle-banner', '.ad-banner-top', '.ad-banner-bottom',
+    '.bnrBb', '.bnSuper',
+    // context-qualified banner: only inside ad wrappers
+    'div[class*="ad"] .banner',
+    'aside .banner',
 
     // --- Sizes ---
     '.pub_300x250', '.pub_300x250m', '.pub_728x90',
     '.ads300x250', '.ad_300x250', '.ad_320x100',
-    '.rec', '.rectangle',
 
     // --- Data Attribute Selectors ---
     '[data-ad-cls]', '[data-ad-manager-id]', '[data-ad-module]',
@@ -226,11 +247,7 @@
     '#adBlockOverlay', '.adblock-popup',
     '#disable-ads-container', '._ap_adrecover_ad',
 
-    // --- WordPress ad widgets ---
-    '.widget_custom_html:has(.adsbygoogle)',
-    '.widget_text:has(ins.adsbygoogle)',
-
-    // --- Social widgets (optional, but reduces clutter) ---
+    // --- Social widgets ---
     '.addthis_toolbox', '.addthis_native_toolbox',
     '.addthis_sharing_toolbox',
     '.addtoany_share_save_container',
@@ -239,117 +256,227 @@
     'a[href^="https://paid.outbrain.com/network/redir?"]',
     'a[href^="https://ad.doubleclick.net/"]',
     'a[href^="https://adclick.g.doubleclick.net/"]',
+    'a[href^="https://pubads.g.doubleclick.net/"]',
     'a[href^="https://syndication.exoclick.com/"]',
     'a[href^="https://www.googleadservices.com/pagead/aclk?"]',
+    'a[href*="&maxads="]',
+    'a[href*=".adsrv.eacdn.com/"]',
+    'a[href*=".engine.adglare.net/"]',
+    'a[href*="/jump/next.php?r="]',
+    'a[href^="https://www.adskeeper.com"]',
+    'a[href^="https://clickadilla.com/"]',
+    'a[href^="https://juicyads.in/"]',
+    'a[href^="https://www.highperformancecpmgate.com/"]',
+    'a[href^="https://www.toprevenuegate.com/"]',
+    'a[href^="https://www.effectiveratecpm.com/"]',
+    'a[href^="https://www.profitablegatecpm.com/"]',
+    'a[href^="https://traffdaq.com/"]',
+    'a[onmousedown*="paid.outbrain.com"]',
 
-    // --- Tracking pixels / beacons ---
-    'img[src*="pixel."]',
-    'img[src*="/pixel?"]',
-    'img[src*="beacon."]',
-    'img[width="1"][height="1"]',
-    'img[width="0"][height="0"]'
-  ].join(',\n');
+    // --- Tracking pixels (safe patterns: 1x1 or 0x0 with tracking src) ---
+    'img[src*="googlesyndication.com"][width="1"]',
+    'img[src*="doubleclick.net"][width="1"]',
+    'img[src*="facebook.com/tr"][width="1"]',
+    'img[src*="analytics"][width="1"][height="1"]',
+    'img[src*="tracker"][width="1"][height="1"]',
+    'img[src*="beacon"][width="1"][height="1"]',
+    'img[src*="pixel."][width="1"][height="1"]',
+
+    // --- Additional ad network containers ---
+    '.mgid_3x2', '.mgid-wrapper',
+    'citrus-ad-wrapper', 'ps-connatix-module',
+    'hl-adsense', 'a-ad', 'zeus-ad',
+    'div[ow-ad-unit-wrapper]',
+    'img[src^="https://s-img.adskeeper.com/"]',
+
+    // --- Adsense label variants ---
+    '.adsbygoogle2', '.adsbygoogle-box',
+    '.adsbygoogle-noablate', '.adsbygoogle-wrapper',
+    '.adSense', '.Adsense', '.AdSense',
+    '.adsense_ad', '.adsense_block', '.adsense_container',
+    '.adsense_wrapper', '.adsense-ads', '.adsenseAds',
+    '.adsense_mpu', '.adsense_rectangle',
+
+    // --- Additional sticky/overlay variants ---
+    '.Sticky-AdContainer', '.StickyAdRail__Inner',
+    '.sticky-adsense', '.sticky-ads-content',
+    '.anchor-ad-wrapper',
+
+    // --- Additional sponsored variants ---
+    '.SponsoredContent', '.SponsoredLinks',
+    '.sponsoredResults', '.sponsored-results',
+    '.sponsored_result'
+  ].join(',');
 
   // ============================================================
-  // SECTION 2: Japanese Site-Specific CSS Rules
+  // SECTION 2: Japanese Site-Specific CSS Rules (domain-gated)
   // ============================================================
 
-  var JP_CSS_RULES = [
-    // --- Yahoo Japan ---
-    'div[class^="yjads"]', 'div[id^="yads"]',
-    'iframe[id$="_ad_frame"]',
-    '.KaimonoBackground',
-    '#msthdShpPr', '#msthdUhd', '#mhd_uhd_pc',
-    '#msthdtp', '#windowShade', '#rma-pdv',
-    '#pickupservice', '#Peron', '#brandpanel',
-    '#PopHead', '#TopLink', '#TBP', '#TCBX',
-    '#CenterBanner', '#commercebox',
-    '#bpComposite', '#GoToBanner',
-    '#js-ninjyo', '#js-Commerce',
-    '#Service', '#Shopping',
-    '.sw-AdSection', '#yfa_psp_wrap',
-    '#lrec', '.adWrap',
-
-    // --- Niconico ---
-    'div[class^="Ads"]', '.CommentPanelBannerAd',
-    '.AnimatorContainer',
-    'div[class$="AdContainer"]',
-    'div[data-ads-header-banner]',
-    '#head_ads', '#web_pc_prime',
-    '.billboard-ad', '.kokoku',
-    '#header-ad', '#middle-ad', '#footer-ad',
-    '.ad-bannar-maincolumn-top',
-
-    // --- 5ch ---
-    '.ADVERTISE_AREA',
-    'div[id^="horizontalbanners"]',
-    '.ad--bottom', '.ads_conten_main',
-    '.adbanners', '.sproutad_frame-description',
-
-    // --- Ameblo ---
-    '.subAdBannerHeader', '.subAdBannerArea',
-    'div[data-slot="injected"]',
-    'div[amb-component="entryAd"]',
-    '.bfl-snews__outer', '.skin-entryAd',
-
-    // --- FC2 ---
-    '#fc2_bottom_bnr', '#fc2_ad_box',
-
-    // --- Hatena ---
-    '#pc-billboard-ad', '.sleeping-ads',
-    '.page-odai-ad',
-
-    // --- Rakuten ---
-    '#ad',
-
-    // --- Pixiv ---
-    '.ad-footer', '.ads_area_no_margin',
-    '.multi-ads-area',
-
-    // --- Kakaku.com ---
-    '.fixedRightAdContainer', '.s-jack_img',
-    '.sqTwo', '.c-ad',
-
-    // --- Weblio ---
-    '.flex-rectangle-ads-frame',
-    '.premium-service-button',
-
-    // --- Goo ---
-    '.businessanswer', '#gooad-long', '.pr-unit',
-    '.NR-pr', '.NR-ad',
-
-    // --- Tenki.jp ---
-    '.tenki-ad-pd', '.tenki-ad-pc-ct',
-    '#tenki-ad-3rd_PD',
-
-    // --- Abema TV ---
-    '#videoAdContainer',
-    '.theoplayer-ad-nonlinear',
-    '.com-tv-top-CommercialBannerCarousel',
-
-    // --- YouTube ---
-    '.video-ads', '.ytp-ad-progress-list',
-    '#player-ads', '#masthead-ad',
-    'ytd-promoted-sparkles-web-renderer',
-    'ytd-carousel-ad-renderer',
-    'ytd-display-ad-renderer',
-    'ytd-ad-slot-renderer',
-    '.ytd-search-pyv-renderer',
-    '.pyv-afc-ads-container', '.iv-promo',
-
-    // --- Wiki sites ---
-    '#inbound-ad-container',
-    '.atwiki-ads-margin',
-
-    // --- Kotobank ---
-    '.pc-iframe-ad', '.pc-word-ad', '.header-ad',
-
-    // --- Google Search JP ---
-    '#tads[aria-label="広告"]',
-    '#bottomads',
-    '.commercial-unit-desktop-rhs',
-    '.commercial-unit-desktop-top'
-  ].join(',\n');
+  var SITE_RULES = {
+    'yahoo.co.jp': [
+      'div[class^="yjads"]', 'div[id^="yads"]',
+      'iframe[id$="_ad_frame"]',
+      '.KaimonoBackground',
+      '#msthdShpPr', '#msthdUhd', '#mhd_uhd_pc',
+      '#msthdtp', '#windowShade', '#rma-pdv',
+      '#pickupservice', '#Peron', '#brandpanel',
+      '#PopHead', '#TopLink', '#TBP', '#TCBX',
+      '#CenterBanner', '#commercebox',
+      '#bpComposite', '#GoToBanner',
+      '#js-ninjyo', '#js-Commerce',
+      '#Service', '#Shopping',
+      '.sw-AdSection', '#yfa_psp_wrap',
+      '#lrec', '.adWrap'
+    ],
+    'nicovideo.jp': [
+      '.CommentPanelBannerAd',
+      '.AnimatorContainer',
+      'div[class$="AdContainer"]',
+      'div[data-ads-header-banner]',
+      '#head_ads', '#web_pc_prime',
+      '.billboard-ad', '.kokoku',
+      '#header-ad', '#middle-ad', '#footer-ad',
+      '.ad-bannar-maincolumn-top'
+    ],
+    '5ch.net': [
+      '.ADVERTISE_AREA',
+      'div[id^="horizontalbanners"]',
+      '.ad--bottom', '.ads_conten_main',
+      '.adbanners', '.sproutad_frame-description'
+    ],
+    'ameblo.jp': [
+      '.subAdBannerHeader', '.subAdBannerArea',
+      'div[data-slot="injected"]',
+      'div[amb-component="entryAd"]',
+      '.bfl-snews__outer', '.skin-entryAd'
+    ],
+    'fc2.com': [
+      '#fc2_bottom_bnr', '#fc2_ad_box'
+    ],
+    'hatena.ne.jp': [
+      '#pc-billboard-ad', '.sleeping-ads', '.page-odai-ad'
+    ],
+    'hatenablog.com': [
+      '#pc-billboard-ad', '.sleeping-ads'
+    ],
+    'pixiv.net': [
+      '.ad-footer', '.ads_area_no_margin', '.multi-ads-area'
+    ],
+    'kakaku.com': [
+      '.fixedRightAdContainer', '.s-jack_img', '.sqTwo', '.c-ad'
+    ],
+    'weblio.jp': [
+      '.flex-rectangle-ads-frame', '.premium-service-button'
+    ],
+    'goo.ne.jp': [
+      '.businessanswer', '#gooad-long', '.pr-unit',
+      '.NR-pr', '.NR-ad'
+    ],
+    'tenki.jp': [
+      '.tenki-ad-pd', '.tenki-ad-pc-ct', '#tenki-ad-3rd_PD'
+    ],
+    'abema.tv': [
+      '#videoAdContainer',
+      '.theoplayer-ad-nonlinear',
+      '.com-tv-top-CommercialBannerCarousel'
+    ],
+    'youtube.com': [
+      '.video-ads', '.ytp-ad-progress-list',
+      '#player-ads', '#masthead-ad',
+      'ytd-promoted-sparkles-web-renderer',
+      'ytd-carousel-ad-renderer',
+      'ytd-display-ad-renderer',
+      'ytd-ad-slot-renderer',
+      '.ytd-search-pyv-renderer',
+      '.pyv-afc-ads-container', '.iv-promo'
+    ],
+    'wikiwiki.jp': [
+      '#inbound-ad-container'
+    ],
+    'atwiki.jp': [
+      '.atwiki-ads-margin'
+    ],
+    'kotobank.jp': [
+      '.pc-iframe-ad', '.pc-word-ad', '.header-ad'
+    ],
+    'google.co.jp': [
+      '#tads[aria-label="広告"]',
+      '#bottomads',
+      '.commercial-unit-desktop-rhs',
+      '.commercial-unit-desktop-top'
+    ],
+    'bbspink.com': [
+      '.sidemenu_banner', '.ticker',
+      'div[class^="banner_area_"]',
+      '#bbspink-bottom-ads', '#top_banner',
+      '.js--ad--bottom', '#float-bnr',
+      '.bbspink-top-ads',
+      '.ad_subb', '.ad_subb_ft'
+    ],
+    'livedoor.com': [
+      '.ad-wrapper', 'div.adsW'
+    ],
+    'news.livedoor.com': [
+      '.mainSec .adsW', '.ad-wrapper'
+    ],
+    'excite.co.jp': [
+      '.yadsOverlay', '.ex-crt-wrapper', '#pageFeatures'
+    ],
+    'tabelog.com': [
+      'div[class^="ad-min-size-"]', '.rstdtl-cmad--middle'
+    ],
+    'nifty.com': [
+      '#float-bnr'
+    ],
+    '4gamer.net': [
+      '.ad_top', '.ad_container', '.banner_left_4g', '.satellite_banner'
+    ],
+    'dic.nicovideo.jp': [
+      '.ad-bannar-maincolumn-top', 'div[id^="crt-"]'
+    ],
+    'dic.pixiv.net': [
+      '.d_header'
+    ],
+    'jbbs.shitaraba.net': [
+      'iframe[id^="ox_"]', '.ad-320_50', '#recommend_ad'
+    ],
+    'travel.rakuten.co.jp': [
+      '#ad'
+    ],
+    'rakuten.co.jp': [
+      '#ad'
+    ],
+    'search.yahoo.co.jp': [
+      '#So1', '#So2', '.sw-AdSection', '#yfa_psp_wrap'
+    ],
+    'news.yahoo.co.jp': [
+      '#lrec', '.adWrap', 'div[id^="spocon"]'
+    ],
+    'finance.yahoo.co.jp': [
+      'div[id^="ad_"]', '#promo', '#top_promo',
+      '#pr_main1', '#pr_main2', 'p.cafxBanner'
+    ],
+    'auctions.yahoo.co.jp': [
+      '#So1', '#So2', '.acMdAdPr', 'div[class^="Promotion-sc"]'
+    ],
+    'weather.yahoo.co.jp': [
+      '.ad-frame-fix', '#ad-lrec', '#ad-ysp', '#ad-ct'
+    ],
+    'live.nicovideo.jp': [
+      'aside[class^="___billboard-ad"]',
+      'aside[class^="___ad-billboard"]',
+      'aside[class^="___ad-banner"]',
+      'div[class^="___player-ad-panel___"]'
+    ],
+    'live2.nicovideo.jp': [
+      'aside[class^="___banner-panel"]',
+      'aside[class^="___billboard-ad___"]',
+      'aside[class^="___billboard-banner___"]'
+    ],
+    'news.nicovideo.jp': [
+      '#billboard_container', '.ad-container'
+    ]
+  };
 
   // ============================================================
   // SECTION 3: Affiliate Link CSS (Japanese Networks)
@@ -374,57 +501,73 @@
     'a[href^="https://ac.ebis.ne.jp"]',
     'a[href*="amazon-adsystem.com"]',
     'a[href*="click.ad-stir.com"]'
-  ].join(',\n');
+  ].join(',');
 
   // ============================================================
-  // SECTION 4: Inject all CSS rules immediately
+  // SECTION 4: Inject CSS rules
   // ============================================================
 
-  var allCSS = [CSS_RULES, JP_CSS_RULES, AFFILIATE_CSS].join(',\n');
-  var hideStyle = allCSS + ' { display: none !important; visibility: hidden !important; height: 0 !important; min-height: 0 !important; max-height: 0 !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important; }';
+  var hideDecl = ' { display: none !important; }';
 
-  SLEX_addStyle(hideStyle);
+  // Global rules
+  SLEX_addStyle(CSS_RULES + hideDecl);
+  SLEX_addStyle(AFFILIATE_CSS + hideDecl);
 
-  // Extra: hide common ad size containers
+  // Site-specific rules (only inject for matching domain)
+  var domain, rules;
+  for (domain in SITE_RULES) {
+    if (SITE_RULES.hasOwnProperty(domain) && matchDomain(domain)) {
+      rules = SITE_RULES[domain];
+      SLEX_addStyle(rules.join(',') + hideDecl);
+    }
+  }
+
+  // Protect decoy elements from our own CSS rules
+  SLEX_addStyle('div.adsbygoogle[style*="left:-9999px"] { display: block !important; height: 1px !important; }');
+  SLEX_addStyle('div.ad-placement[style*="left:-9999px"] { display: block !important; height: 1px !important; }');
+  SLEX_addStyle('div.adsbox[style*="left:-9999px"] { display: block !important; height: 1px !important; }');
+
+  // Size-based inline style hiding
   SLEX_addStyle([
-    'div[style*="width:300px"][style*="height:250px"] { display: none !important; }',
-    'div[style*="width: 300px"][style*="height: 250px"] { display: none !important; }',
-    'div[style*="width:300px"][style*="height:600px"] { display: none !important; }',
-    'div[style*="width:728px"][style*="height:90px"] { display: none !important; }',
-    'div[style*="width:320px"][style*="height:50px"] { display: none !important; }',
-    'div[style*="width:320px"][style*="height:100px"] { display: none !important; }',
-    // Fixed position full-screen overlays (anti-adblock)
-    'div[style*="position: fixed"][style*="z-index: 999999"] { display: none !important; }',
-    'div[style*="position:fixed"][style*="z-index:999999"] { display: none !important; }'
-  ].join('\n'));
+    'div[style*="width:300px"][style*="height:250px"]',
+    'div[style*="width: 300px"][style*="height: 250px"]',
+    'div[style*="width:300px"][style*="height:600px"]',
+    'div[style*="width:728px"][style*="height:90px"]',
+    'div[style*="width:320px"][style*="height:50px"]',
+    'div[style*="width:320px"][style*="height:100px"]'
+  ].join(',') + hideDecl);
 
   // ============================================================
-  // SECTION 5: DOM Removal (thorough cleanup)
+  // SECTION 5: DOM Removal (targeted, no full-page scan)
   // ============================================================
 
-  // Selectors for elements to completely remove from DOM
+  // Selectors for elements to remove from DOM (iframes that waste bandwidth)
   var REMOVE_SELECTORS = [
-    // iframes from ad networks
     'iframe[src*="googlesyndication.com"]',
     'iframe[src*="doubleclick.net"]',
     'iframe[src*="amazon-adsystem.com"]',
     'iframe[src*="ad.yieldmanager.com"]',
-    'iframe[src*="adserver"]',
-    'iframe[src*="adsrv"]',
-    'iframe[src*="admicro"]',
     'iframe[src*="ad-stir.com"]',
     'iframe[src*="i-mobile.co.jp"]',
     'iframe[src*="microad.net"]',
     'iframe[src*="nend.net"]',
     'iframe[src*="geniee"]',
     'iframe[src*="media5.fc2.com"]',
-    // ad scripts containers
-    'ins.adsbygoogle',
-    'ins[id^="gpt_unit_/"]',
-    // empty ad placeholders
+    'iframe[src*="criteo.net"]',
+    'iframe[src*="criteo.com"]',
+    'iframe[src*="taboola.com"]',
+    'iframe[src*="outbrain.com"]',
+    'iframe[src*="adingo.jp"]',
+    'iframe[src*="popin.cc"]',
+    'iframe[src*="popads.net"]',
+    'iframe[src*="mgid.com"]',
+    'iframe[src*="zergnet.com"]',
+    'iframe[src*="exoclick.com"]',
+    'iframe[src*="juicyads"]',
+    'iframe[src*="adskeeper.com"]',
     'div[id^="div-gpt-ad"]:empty',
     'div[id^="ezoic-pub-ad-"]:empty'
-  ];
+  ].join(', ');
 
   // Text patterns that indicate ad/PR content (Japanese)
   var PR_TEXT_PATTERNS = [
@@ -437,188 +580,19 @@
     /^\s*Advertisement\s*$/i
   ];
 
-  function removeAds() {
-    // Remove ad elements from DOM
-    var removeSelector = REMOVE_SELECTORS.join(', ');
-    $(removeSelector).each(function () {
-      $(this).remove();
-    });
-
-    // Remove elements with ad-related IDs (pattern match)
-    $('[id]').each(function () {
-      var id = this.id.toLowerCase();
-      if (/^(ad[_-]|ads[_-]|adv[_-]|advert|adsense|adslot|adspot|adzone|google_ads|div-gpt-ad)/.test(id)) {
-        // Skip false positives
-        if (/^(add|admin|adjust|adopt|advance|advic|advent|address|adobe)/.test(id)) return;
-        $(this).css({
-          'display': 'none',
-          'visibility': 'hidden',
-          'height': '0',
-          'overflow': 'hidden'
-        });
-      }
-    });
-
-    // Remove elements with ad-related classes (pattern match)
-    $('[class]').each(function () {
-      var cls = ' ' + this.className.toLowerCase() + ' ';
-      if (/\b(ad[_-]?banner|ad[_-]?slot|ad[_-]?unit|ad[_-]?wrap|ad[_-]?box|ad[_-]?container|adsense|advert|sponsor|taboola|outbrain)\b/.test(cls)) {
-        // Skip false positives
-        if (/\b(add[_-]|admin|shadow|badge|radio)\b/.test(cls)) return;
-        $(this).css({
-          'display': 'none',
-          'visibility': 'hidden',
-          'height': '0',
-          'overflow': 'hidden'
-        });
-      }
-    });
-
-    // Clean up empty space left by removed ads
-    $('div, section, aside').each(function () {
-      var $el = $(this);
-      if ($el.children().length === 0 && $.trim($el.text()) === '' && $el.height() > 100) {
-        var style = window.getComputedStyle(this);
-        if (style.position === 'fixed' || style.position === 'sticky') {
-          $el.remove();
-        }
-      }
-    });
+  function removeAdIframes() {
+    $(REMOVE_SELECTORS).remove();
   }
-
-  // ============================================================
-  // SECTION 6: MutationObserver (catch dynamically loaded ads)
-  // ============================================================
-
-  var observerTimer = null;
-  var pendingMutations = false;
-
-  function handleMutations() {
-    if (pendingMutations) return;
-    pendingMutations = true;
-    // Debounce: process after 200ms of quiet
-    clearTimeout(observerTimer);
-    observerTimer = setTimeout(function () {
-      pendingMutations = false;
-      removeAds();
-    }, 200);
-  }
-
-  if (typeof MutationObserver !== 'undefined') {
-    var observer = new MutationObserver(function (mutations) {
-      var dominated = false;
-      for (var i = 0; i < mutations.length; i++) {
-        if (mutations[i].addedNodes.length > 0) {
-          dominated = true;
-          break;
-        }
-      }
-      if (dominated) {
-        handleMutations();
-      }
-    });
-
-    observer.observe(document.body || document.documentElement, {
-      childList: true,
-      subtree: true
-    });
-  }
-
-  // ============================================================
-  // SECTION 7: Script/iframe blocker (prevent ad scripts from loading)
-  // ============================================================
-
-  // Block known ad scripts by removing them
-  var AD_SCRIPT_PATTERNS = [
-    /googlesyndication\.com/,
-    /pagead2\.googlesyndication/,
-    /doubleclick\.net/,
-    /google-analytics\.com\/analytics/,
-    /googletagmanager\.com/,
-    /adservice\.google/,
-    /amazon-adsystem\.com/,
-    /cdn\.taboola\.com/,
-    /widgets\.outbrain\.com/,
-    /cdn\.zergnet\.com/,
-    /cdn\.mgid\.com/,
-    /popads\.net/,
-    /adstir\.com/,
-    /i-mobile\.co\.jp/,
-    /nend\.net/,
-    /microad\.net/,
-    /geniee/,
-    /criteo\.net/,
-    /criteo\.com/,
-    /adingo\.jp/,
-    /logly\.co\.jp/,
-    /popin\.cc/,
-    /yimg\.jp\/images\/ds\/yjads/,
-    /yads\.yahoo\.co\.jp/,
-    /s\.yimg\.jp\/images\/listing/,
-    /ad\.nicovideo\.jp/
-  ];
-
-  function blockAdScripts() {
-    $('script[src]').each(function () {
-      var src = this.src || '';
-      for (var i = 0; i < AD_SCRIPT_PATTERNS.length; i++) {
-        if (AD_SCRIPT_PATTERNS[i].test(src)) {
-          $(this).remove();
-          break;
-        }
-      }
-    });
-  }
-
-  // ============================================================
-  // SECTION 8: Anti-adblock bypass
-  // ============================================================
-
-  function bypassAntiAdblock() {
-    // Remove common anti-adblock overlays
-    var antiSelectors = [
-      '#adBlockOverlay',
-      '.adblock-popup',
-      '.adblock-overlay',
-      '.adblock-modal',
-      '.adblock-notice',
-      '.adblock-warning',
-      '#disable-ads-container',
-      '[class*="adblock-detect"]',
-      '[class*="adblocker-detect"]',
-      '[id*="adblock-detect"]',
-      'div[style*="position: fixed"][style*="z-index"][style*="background"]'
-    ];
-    $(antiSelectors.join(', ')).remove();
-
-    // Restore scrolling if blocked by anti-adblock
-    $('body').css({
-      'overflow': 'auto !important',
-      'position': 'static !important'
-    });
-    $('html').css('overflow', 'auto !important');
-
-    // Create decoy ad element to fool detection scripts
-    var decoy = document.createElement('div');
-    decoy.className = 'adsbox ad-placement ad-banner';
-    decoy.id = 'ad-test';
-    decoy.innerHTML = '&nbsp;';
-    decoy.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;';
-    document.body.appendChild(decoy);
-  }
-
-  // ============================================================
-  // SECTION 9: Clean up PR / sponsored labels in content
-  // ============================================================
 
   function cleanPRLabels() {
-    $('span, div, p, label, small').each(function () {
+    $('span, label, small').each(function () {
       var text = $.trim($(this).text());
+      if (!text || text.length > 20) return; // PR labels are short
       for (var i = 0; i < PR_TEXT_PATTERNS.length; i++) {
         if (PR_TEXT_PATTERNS[i].test(text)) {
-          // Hide the parent container (likely the ad card)
-          var $parent = $(this).closest('article, li, div[class], section');
-          if ($parent.length) {
+          // Hide the closest ad-like container, but limit traversal depth
+          var $parent = $(this).closest('article, li, [class*="ad"], [class*="sponsor"], [class*="pr-"]');
+          if ($parent.length && $parent[0].tagName !== 'BODY') {
             $parent.css('display', 'none');
           }
           break;
@@ -628,43 +602,112 @@
   }
 
   // ============================================================
-  // SECTION 10: Execute everything
+  // SECTION 6: Anti-adblock bypass
+  // ============================================================
+
+  var decoyCreated = false;
+
+  function bypassAntiAdblock() {
+    // Remove common anti-adblock overlays
+    $(
+      '#adBlockOverlay,' +
+      '.adblock-popup,' +
+      '.adblock-overlay,' +
+      '.adblock-modal,' +
+      '.adblock-notice,' +
+      '.adblock-warning,' +
+      '#disable-ads-container,' +
+      '[class*="adblock-detect"],' +
+      '[class*="adblocker-detect"],' +
+      '[id*="adblock-detect"]'
+    ).remove();
+
+    // Restore scrolling if blocked by anti-adblock (use cssText for !important)
+    var body = document.body;
+    var html = document.documentElement;
+    if (body && body.style.overflow === 'hidden') {
+      body.style.cssText += '; overflow: auto !important; position: static !important;';
+    }
+    if (html && html.style.overflow === 'hidden') {
+      html.style.cssText += '; overflow: auto !important;';
+    }
+
+    // Create decoy ad elements only once (fool multiple detection methods)
+    if (!decoyCreated && body) {
+      decoyCreated = true;
+      // Decoy 1: class-based detection (adsbox)
+      var decoy1 = document.createElement('div');
+      decoy1.className = 'adsbox';
+      decoy1.innerHTML = '&nbsp;';
+      decoy1.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;';
+      body.appendChild(decoy1);
+      // Decoy 2: id-based detection (ad-banner)
+      var decoy2 = document.createElement('div');
+      decoy2.className = 'ad-placement ad-banner textads banner-ads';
+      decoy2.innerHTML = '&nbsp;';
+      decoy2.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;';
+      body.appendChild(decoy2);
+      // Decoy 3: google ads iframe name detection
+      var decoy3 = document.createElement('div');
+      decoy3.className = 'adsbygoogle';
+      decoy3.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;display:block !important;';
+      body.appendChild(decoy3);
+    }
+  }
+
+  // ============================================================
+  // SECTION 7: MutationObserver (catch dynamically loaded ads)
+  // ============================================================
+
+  var debounceTimer = null;
+
+  function onDomChanged() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(function () {
+      removeAdIframes();
+    }, 200);
+  }
+
+  if (typeof MutationObserver !== 'undefined') {
+    var target = document.body || document.documentElement;
+    if (target) {
+      var observer = new MutationObserver(function (mutations) {
+        for (var i = 0; i < mutations.length; i++) {
+          if (mutations[i].addedNodes.length > 0) {
+            onDomChanged();
+            return;
+          }
+        }
+      });
+
+      observer.observe(target, {
+        childList: true,
+        subtree: true
+      });
+    }
+  }
+
+  // ============================================================
+  // SECTION 8: Execute
   // ============================================================
 
   // Run immediately
-  removeAds();
-  blockAdScripts();
+  removeAdIframes();
   bypassAntiAdblock();
 
   // Run again after short delay (catch late-loading ads)
   setTimeout(function () {
-    removeAds();
-    blockAdScripts();
+    removeAdIframes();
     cleanPRLabels();
     bypassAntiAdblock();
-  }, 1000);
+  }, 1500);
 
-  // Run again after longer delay (catch very late ads)
+  // One final cleanup
   setTimeout(function () {
-    removeAds();
-    blockAdScripts();
+    removeAdIframes();
     cleanPRLabels();
-  }, 3000);
-
-  // Periodic cleanup every 5 seconds for first 30 seconds
-  var cleanupCount = 0;
-  var cleanupInterval = setInterval(function () {
-    removeAds();
-    blockAdScripts();
-    cleanupCount++;
-    if (cleanupCount >= 6) {
-      clearInterval(cleanupInterval);
-    }
   }, 5000);
 
-  // Log (for debugging)
-  if (typeof console !== 'undefined') {
-    console.log('[Ultimate AdBlock] v1.0.0 loaded - 2000+ filters active');
-  }
+  console.log('[Ultimate AdBlock] v2.0.0 loaded');
 
 })();
