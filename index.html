@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SimpleADBlocker - Sleipnir Mobile AdBlock</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+    .hero {
+      text-align: center;
+      padding: 40px 0 32px;
+    }
+    .hero-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 32px;
+    }
+    .install-btn {
+      display: block;
+      width: 100%;
+      padding: 18px 24px;
+      background: linear-gradient(135deg, #ff4444, #cc0000);
+      color: #fff;
+      font-size: 18px;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 20px rgba(255, 68, 68, 0.3);
+    }
+    .install-btn:active {
+      transform: scale(0.97);
+    }
+    .install-note {
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+      margin-top: 12px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin: 32px 0;
+    }
+    .stat {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 16px 8px;
+      text-align: center;
+    }
+    .stat-num {
+      font-size: 24px;
+      font-weight: 700;
+      color: #ff4444;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: #888;
+      margin-top: 4px;
+    }
+    .section {
+      margin: 28px 0;
+    }
+    h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #222;
+    }
+    .feature-list {
+      list-style: none;
+    }
+    .feature-list li {
+      padding: 10px 0;
+      border-bottom: 1px solid #1a1a1a;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .feature-list li:last-child {
+      border-bottom: none;
+    }
+    .tag {
+      display: inline-block;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 11px;
+      color: #aaa;
+      margin: 2px 2px;
+    }
+    .tag-jp {
+      border-color: #cc0000;
+      color: #ff6666;
+    }
+    .steps {
+      counter-reset: step;
+      list-style: none;
+    }
+    .steps li {
+      counter-increment: step;
+      padding: 12px 0 12px 40px;
+      position: relative;
+      font-size: 14px;
+      line-height: 1.6;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    .steps li:last-child {
+      border-bottom: none;
+    }
+    .steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 12px;
+      width: 28px;
+      height: 28px;
+      background: #ff4444;
+      color: #fff;
+      border-radius: 50%;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .footer {
+      text-align: center;
+      padding: 32px 0 16px;
+      font-size: 12px;
+      color: #555;
+    }
+    .footer a {
+      color: #888;
+      text-decoration: none;
+    }
+    .warning {
+      background: #1a1500;
+      border: 1px solid #4a3a00;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #ccaa44;
+      margin-top: 20px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <div class="hero-icon">&#x1F6E1;</div>
+      <h1>SimpleADBlocker</h1>
+      <p class="subtitle">Sleipnir Mobile (Android) 向け最強アドブロッカー</p>
+    </div>
+
+    <a href="sleipnir-adblock.slex.js" class="install-btn">
+      インストール
+    </a>
+    <p class="install-note">Sleipnir Mobile で開くと自動でインストールダイアログが表示されます</p>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-num">2000+</div>
+        <div class="stat-label">フィルタ数</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">30+</div>
+        <div class="stat-label">広告ネットワーク</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">20+</div>
+        <div class="stat-label">対応日本語サイト</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>機能</h2>
+      <ul class="feature-list">
+        <li><strong>CSS即時非表示</strong> — ページ描画と同時に広告を非表示。ちらつき最小限</li>
+        <li><strong>DOM完全除去</strong> — 広告iframe・スクリプトコンテナをDOMから完全削除</li>
+        <li><strong>動的広告検知</strong> — MutationObserverで後から追加される広告もリアルタイム除去</li>
+        <li><strong>広告スクリプト除去</strong> — Google, Taboola, nend, i-mobile等のスクリプトタグを削除</li>
+        <li><strong>Anti-adblock回避</strong> — 「広告ブロッカーを無効にしてください」を突破</li>
+        <li><strong>PR記事除去</strong> — 「PR」「広告」「スポンサーリンク」ラベルの親要素ごと非表示</li>
+        <li><strong>アフィリエイト非表示</strong> — A8, ValueCommerce, 楽天アフィリエイト等</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>対応サイト</h2>
+      <p style="margin-bottom: 8px;">
+        <span class="tag tag-jp">Yahoo Japan</span>
+        <span class="tag tag-jp">ニコニコ動画</span>
+        <span class="tag tag-jp">5ch</span>
+        <span class="tag tag-jp">Ameblo</span>
+        <span class="tag tag-jp">FC2</span>
+        <span class="tag tag-jp">はてな</span>
+        <span class="tag tag-jp">Pixiv</span>
+        <span class="tag tag-jp">価格.com</span>
+        <span class="tag tag-jp">Weblio</span>
+        <span class="tag tag-jp">goo</span>
+        <span class="tag tag-jp">tenki.jp</span>
+        <span class="tag tag-jp">Abema TV</span>
+        <span class="tag tag-jp">YouTube</span>
+        <span class="tag tag-jp">楽天</span>
+        <span class="tag tag-jp">Kotobank</span>
+      </p>
+      <p style="font-size: 12px; color: #888;">+ 全てのサイトで汎用フィルタが動作します</p>
+    </div>
+
+    <div class="section">
+      <h2>対応広告ネットワーク</h2>
+      <p>
+        <span class="tag">Google AdSense</span>
+        <span class="tag">DFP/GAM</span>
+        <span class="tag">DoubleClick</span>
+        <span class="tag">Taboola</span>
+        <span class="tag">Outbrain</span>
+        <span class="tag">Criteo</span>
+        <span class="tag">Zergnet</span>
+        <span class="tag">MGID</span>
+        <span class="tag tag-jp">nend</span>
+        <span class="tag tag-jp">i-mobile</span>
+        <span class="tag tag-jp">MicroAd</span>
+        <span class="tag tag-jp">Geniee SSP</span>
+        <span class="tag tag-jp">AdStir</span>
+        <span class="tag tag-jp">popIn</span>
+        <span class="tag tag-jp">Yahoo広告</span>
+        <span class="tag tag-jp">A8.net</span>
+        <span class="tag tag-jp">ValueCommerce</span>
+        <span class="tag tag-jp">AccessTrade</span>
+        <span class="tag tag-jp">もしも</span>
+        <span class="tag tag-jp">afb</span>
+        <span class="tag tag-jp">felmat</span>
+        <span class="tag tag-jp">楽天アフィリエイト</span>
+        <span class="tag tag-jp">Amazonアソシエイト</span>
+      </p>
+    </div>
+
+    <div class="section">
+      <h2>インストール方法</h2>
+      <ol class="steps">
+        <li>上の<strong>「インストール」ボタン</strong>をSleipnir Mobileでタップ</li>
+        <li>インストール確認ダイアログが表示されるので<strong>「OK」</strong>をタップ</li>
+        <li>完了！自動で全てのサイトで広告ブロックが有効になります</li>
+      </ol>
+      <div class="warning">
+        <strong>注意:</strong> このエクステンションはSleipnir Mobile (Android) 専用です。他のブラウザでは動作しません。Sleipnir Mobileで直接このページを開いてください。
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>SimpleADBlocker v1.0.0</p>
+      <p style="margin-top: 4px;"><a href="https://github.com/po6896/SimpleADBlocker">GitHub</a></p>
+    </div>
+  </div>
+</body>
+</html>
