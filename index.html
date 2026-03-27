@@ -40,17 +40,16 @@
       display: block;
       width: 100%;
       padding: 18px 24px;
-      background: linear-gradient(135deg, #ff4444, #cc0000);
-      color: #fff;
-      font-size: 18px;
-      font-weight: 700;
+      background: #2a2a2a;
+      color: #e0e0e0;
+      font-size: 16px;
+      font-weight: 600;
       text-align: center;
       text-decoration: none;
-      border: none;
-      border-radius: 12px;
+      border: 1px solid #444;
+      border-radius: 10px;
       cursor: pointer;
-      transition: transform 0.15s, box-shadow 0.15s;
-      box-shadow: 0 4px 20px rgba(255, 68, 68, 0.3);
+      transition: transform 0.15s, background 0.15s;
     }
     .install-btn:active {
       transform: scale(0.97);
@@ -177,9 +176,8 @@
 <body>
   <div class="container">
     <div class="hero">
-      <div class="hero-icon">&#x1F6E1;</div>
-      <h1>SimpleADBlocker</h1>
-      <p class="subtitle">Sleipnir Mobile (Android) 向け最強アドブロッカー</p>
+      <h1>Simple AD Blocker</h1>
+      <p class="subtitle">Sleipnir Mobile (Android) 向け広告ブロッカー</p>
     </div>
 
     <a href="sleipnir-adblock.slex.js" class="install-btn">
@@ -187,83 +185,15 @@
     </a>
     <p class="install-note">Sleipnir Mobile で開くと自動でインストールダイアログが表示されます</p>
 
-    <div class="stats">
-      <div class="stat">
-        <div class="stat-num">2000+</div>
-        <div class="stat-label">フィルタ数</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num">30+</div>
-        <div class="stat-label">広告ネットワーク</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num">20+</div>
-        <div class="stat-label">対応日本語サイト</div>
-      </div>
-    </div>
-
     <div class="section">
       <h2>機能</h2>
       <ul class="feature-list">
-        <li><strong>CSS即時非表示</strong> — ページ描画と同時に広告を非表示。ちらつき最小限</li>
-        <li><strong>DOM完全除去</strong> — 広告iframe・スクリプトコンテナをDOMから完全削除</li>
-        <li><strong>動的広告検知</strong> — MutationObserverで後から追加される広告もリアルタイム除去</li>
-        <li><strong>広告スクリプト除去</strong> — Google, Taboola, nend, i-mobile等のスクリプトタグを削除</li>
-        <li><strong>Anti-adblock回避</strong> — 「広告ブロッカーを無効にしてください」を突破</li>
-        <li><strong>PR記事除去</strong> — 「PR」「広告」「スポンサーリンク」ラベルの親要素ごと非表示</li>
-        <li><strong>アフィリエイト非表示</strong> — A8, ValueCommerce, 楽天アフィリエイト等</li>
+        <li>広告の非表示</li>
+        <li>広告iframeの除去</li>
+        <li>動的に追加される広告の検知</li>
+        <li>日本語サイト対応</li>
+        <li>アフィリエイトリンク非表示</li>
       </ul>
-    </div>
-
-    <div class="section">
-      <h2>対応サイト</h2>
-      <p style="margin-bottom: 8px;">
-        <span class="tag tag-jp">Yahoo Japan</span>
-        <span class="tag tag-jp">ニコニコ動画</span>
-        <span class="tag tag-jp">5ch</span>
-        <span class="tag tag-jp">Ameblo</span>
-        <span class="tag tag-jp">FC2</span>
-        <span class="tag tag-jp">はてな</span>
-        <span class="tag tag-jp">Pixiv</span>
-        <span class="tag tag-jp">価格.com</span>
-        <span class="tag tag-jp">Weblio</span>
-        <span class="tag tag-jp">goo</span>
-        <span class="tag tag-jp">tenki.jp</span>
-        <span class="tag tag-jp">Abema TV</span>
-        <span class="tag tag-jp">YouTube</span>
-        <span class="tag tag-jp">楽天</span>
-        <span class="tag tag-jp">Kotobank</span>
-      </p>
-      <p style="font-size: 12px; color: #888;">+ 全てのサイトで汎用フィルタが動作します</p>
-    </div>
-
-    <div class="section">
-      <h2>対応広告ネットワーク</h2>
-      <p>
-        <span class="tag">Google AdSense</span>
-        <span class="tag">DFP/GAM</span>
-        <span class="tag">DoubleClick</span>
-        <span class="tag">Taboola</span>
-        <span class="tag">Outbrain</span>
-        <span class="tag">Criteo</span>
-        <span class="tag">Zergnet</span>
-        <span class="tag">MGID</span>
-        <span class="tag tag-jp">nend</span>
-        <span class="tag tag-jp">i-mobile</span>
-        <span class="tag tag-jp">MicroAd</span>
-        <span class="tag tag-jp">Geniee SSP</span>
-        <span class="tag tag-jp">AdStir</span>
-        <span class="tag tag-jp">popIn</span>
-        <span class="tag tag-jp">Yahoo広告</span>
-        <span class="tag tag-jp">A8.net</span>
-        <span class="tag tag-jp">ValueCommerce</span>
-        <span class="tag tag-jp">AccessTrade</span>
-        <span class="tag tag-jp">もしも</span>
-        <span class="tag tag-jp">afb</span>
-        <span class="tag tag-jp">felmat</span>
-        <span class="tag tag-jp">楽天アフィリエイト</span>
-        <span class="tag tag-jp">Amazonアソシエイト</span>
-      </p>
     </div>
 
     <div class="section">
@@ -279,7 +209,7 @@
     </div>
 
     <div class="footer">
-      <p>SimpleADBlocker v1.0.0</p>
+      <p>Simple AD Blocker v3.0.0</p>
       <p style="margin-top: 4px;"><a href="https://github.com/po6896/SimpleADBlocker">GitHub</a></p>
     </div>
   </div>
