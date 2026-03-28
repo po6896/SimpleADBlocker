@@ -179,9 +179,10 @@
 
   // --- createElement Interception (Proxy-based for toString stealth) ---
   var origCreateElement = document.createElement;
+  var boundCreateElement = origCreateElement.bind(document);
   document.createElement = new _Proxy(origCreateElement, {
     apply: function (target, thisArg, args) {
-      var el = _Reflect.apply(target, thisArg === document.createElement ? document : thisArg, args);
+      var el = boundCreateElement(args[0]);
       var tagLower = args[0].toLowerCase();
       if (tagLower === 'script' || tagLower === 'iframe') {
         var proto = tagLower === 'script' ? HTMLScriptElement.prototype : HTMLIFrameElement.prototype;
@@ -558,7 +559,7 @@
 
     // JP ad networks
     '.nend_wrapper', '[id^="nend_adspace"]',
-    '[id^="imobile_"]', '.i-mobile-ad',
+    '[id^="imobile_"]', '.i-mobile-ad', 'div[id^="im-"]',
     '[id^="microad"]', '.microad-ad', '[id^="microadcompass-"]',
     '[id^="geniee"]', '[id^="gmossp_ad_"]', '.gmossp_ad_frame',
     '#gmo_bb_recommend', 'div[id^="ad_area_"]',
@@ -582,6 +583,7 @@
     // Ad Inserter plugin (WordPress)
     '.ai_widget', '.ai-sticky-widget',
     'div[data-ai]', 'span[data-ai-block]',
+    'div[class*="code-block"]',
 
     // Bance SSP
     'div[id^="bnc_ad_"]',
@@ -591,6 +593,9 @@
 
     // Floating side banners
     '.spot', '.spot--left', '.spot--right', '.spot--top', '.spot--bottom',
+
+    // sidebar-fix-ad
+    '.sidebar-fix-ad',
 
     // href-based
     'a[href^="https://paid.outbrain.com/network/redir?"]',
@@ -794,7 +799,7 @@
     decoyCreated = true;
     var classes = ['adsbox', 'ad-placement ad-banner textads banner-ads', 'adsbygoogle'];
     for (var i = 0; i < classes.length; i++) {
-      var d = origCreateElement('div');
+      var d = boundCreateElement('div');
       d.className = classes[i];
       d.innerHTML = '&nbsp;';
       d.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;';
