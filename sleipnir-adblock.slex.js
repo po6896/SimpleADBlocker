@@ -36,6 +36,7 @@
   var _Response = typeof Response !== 'undefined' ? Response : null;
   var _MutationObserver = typeof MutationObserver !== 'undefined' ? MutationObserver : null;
   var _nativeToString = Function.prototype.toString;
+  var _origGetComputedStyle = window.getComputedStyle;
 
   var hostname = location.hostname;
 
@@ -176,29 +177,31 @@
     });
   }
 
-  // --- createElement Interception ---
-  var origCreateElement = document.createElement.bind(document);
-  document.createElement = function (tag) {
-    var el = origCreateElement(tag);
-    var tagLower = tag.toLowerCase();
-    if (tagLower === 'script' || tagLower === 'iframe') {
-      var proto = tagLower === 'script' ? HTMLScriptElement.prototype : HTMLIFrameElement.prototype;
-      var desc = _getOwnPropertyDescriptor(proto, 'src');
-      if (desc && desc.set) {
-        var origSet = desc.set;
-        var origGet = desc.get;
-        _defineProperty(el, 'src', {
-          get: function () { return origGet ? origGet.call(this) : this.getAttribute('src'); },
-          set: function (val) {
-            if (isAdUrl(val)) return;
-            if (origSet) origSet.call(this, val); else this.setAttribute('src', val);
-          },
-          configurable: true
-        });
+  // --- createElement Interception (Proxy-based for toString stealth) ---
+  var origCreateElement = document.createElement;
+  document.createElement = new _Proxy(origCreateElement, {
+    apply: function (target, thisArg, args) {
+      var el = _Reflect.apply(target, thisArg === document.createElement ? document : thisArg, args);
+      var tagLower = args[0].toLowerCase();
+      if (tagLower === 'script' || tagLower === 'iframe') {
+        var proto = tagLower === 'script' ? HTMLScriptElement.prototype : HTMLIFrameElement.prototype;
+        var desc = _getOwnPropertyDescriptor(proto, 'src');
+        if (desc && desc.set) {
+          var origSet = desc.set;
+          var origGet = desc.get;
+          _defineProperty(el, 'src', {
+            get: function () { return origGet ? origGet.call(this) : this.getAttribute('src'); },
+            set: function (val) {
+              if (isAdUrl(val)) return;
+              if (origSet) origSet.call(this, val); else this.setAttribute('src', val);
+            },
+            configurable: true
+          });
+        }
       }
+      return el;
     }
-    return el;
-  };
+  });
   proxiedFns.set(document.createElement, origCreateElement);
 
   // --- window.open with decoy (uBO pattern) ---
@@ -295,7 +298,6 @@
   try { abortOnRead('google_ad_status'); } catch (e) {}
   try { abortOnRead('__ads'); } catch (e) {}
   try { abortOnRead('blockAdBlock'); } catch (e) {}
-  try { abortOnRead('blockAdBlock._options'); } catch (e) {}
   try { abortOnRead('sniffAdBlock'); } catch (e) {}
   try { abortOnRead('fuckAdBlock'); } catch (e) {}
   try { abortOnRead('isAdBlockActive'); } catch (e) {}
@@ -349,7 +351,9 @@
   proxyFn(Element.prototype, 'getBoundingClientRect', function (target, thisArg, args) {
     var rect = _Reflect.apply(target, thisArg, args);
     if (thisArg.className && typeof thisArg.className === 'string' && baitClasses.test(thisArg.className)) {
-      return { x: rect.x, y: rect.y, width: 1, height: 1, top: rect.top, right: rect.right, bottom: rect.bottom, left: rect.left };
+      return typeof DOMRect !== 'undefined'
+        ? new DOMRect(rect.x, rect.y, 1, 1)
+        : { x: rect.x, y: rect.y, width: 1, height: 1, top: rect.top, right: rect.right, bottom: rect.bottom, left: rect.left };
     }
     return rect;
   });
@@ -362,7 +366,7 @@
     var el = document.elementFromPoint(vw / 2, vh / 2);
     var removed = false;
     while (el && el !== document.body && el !== document.documentElement) {
-      var style = origGetComputedStyle.call(window, el);
+      var style = _origGetComputedStyle.call(window, el);
       var z = parseInt(style.zIndex, 10);
       if ((z >= 1000 || style.position === 'fixed') && style.display !== 'none') {
         var r = el.getBoundingClientRect();
@@ -379,8 +383,6 @@
     }
     return removed;
   }
-
-  var origGetComputedStyle = window.getComputedStyle;
 
   // --- Tracking cookie removal ---
   function removeTrackingCookies() {
@@ -868,11 +870,15 @@
         var lines = resp.split('\n');
         for (var i = 0; i < lines.length; i++) {
           var l = lines[i];
-          if (l.indexOf('##') === 0 && l.indexOf('#@#') === -1) {
-            var s = l.substring(2).trim();
-            if (s && s.indexOf(':') === -1 && s.indexOf('{') === -1 && s.length < 200) {
-              sels.push(s);
-            }
+          if (l.indexOf('#@#') !== -1) continue;
+          var sepIdx = l.indexOf('##');
+          if (sepIdx === -1) continue;
+          // Global rule (##selector) or domain-matched rule (domain##selector)
+          var domainPart = l.substring(0, sepIdx);
+          if (domainPart && domainPart.indexOf(hostname) === -1) continue;
+          var s = l.substring(sepIdx + 2).trim();
+          if (s && s.indexOf(':') === -1 && s.indexOf('{') === -1 && s.length < 200) {
+            sels.push(s);
           }
         }
         if (sels.length > 0) {
