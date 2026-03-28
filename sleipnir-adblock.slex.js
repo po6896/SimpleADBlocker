@@ -8,7 +8,7 @@
 // @description:ja  広告ネットワーク、トラッカー、ポップアップをブロックします。
 // @include         http://*
 // @include         https://*
-// @version         4.9.0
+// @version         5.0.0
 // @history         4.8.1 Initial gallery release.
 // @history:ja      4.8.1 ギャラリー初回リリース。
 // @require         api
@@ -994,6 +994,22 @@
     return false;
   }
 
+  function nukeElement(el) {
+    try {
+      el.style.setProperty('display', 'none', 'important');
+      el.style.setProperty('visibility', 'hidden', 'important');
+      el.style.setProperty('pointer-events', 'none', 'important');
+      el.style.setProperty('position', 'absolute', 'important');
+      el.style.setProperty('width', '0', 'important');
+      el.style.setProperty('height', '0', 'important');
+      el.innerHTML = '';
+      if (el.parentNode) el.parentNode.removeChild(el);
+    } catch (e) {
+      try { el.style.setProperty('display', 'none', 'important'); } catch (e2) {}
+    }
+    forceUnlockScroll();
+  }
+
   function heuristicScan() {
     if (!document.body) return;
     forceUnlockScroll();
@@ -1036,15 +1052,14 @@
         var hasAdContent = el.querySelector('iframe, ins.adsbygoogle, [class*="ad"], a[target="_blank"]');
         var textLen = (el.textContent || '').trim().length;
         if (hasAdContent || textLen < 50) {
-          el.style.setProperty('display', 'none', 'important');
-          document.body.style.setProperty('overflow', 'auto', 'important');
+          nukeElement(el);
         }
       }
       /* Bottom/top sticky banner */
       if ((rect.top <= 5 || rect.bottom >= vh - 5) && rect.height < 120 && rect.width > vw * 0.5) {
         var innerLinks = el.querySelectorAll('a[target="_blank"], a[href*="click"], a[href*="track"]');
         if (innerLinks.length > 0) {
-          el.style.setProperty('display', 'none', 'important');
+          nukeElement(el);
         }
       }
     }
@@ -1090,8 +1105,7 @@
         if (innerText.indexOf('\u00D7') !== -1 || innerText.indexOf('\u2715') !== -1 || innerText.indexOf('\u2716') !== -1) hasClose = true;
       }
       if (hasClose) {
-        el2.style.setProperty('display', 'none', 'important');
-        document.body.style.setProperty('overflow', 'auto', 'important');
+        nukeElement(el2);
       }
     }
 
@@ -1106,10 +1120,11 @@
       if (isNaN(flZ) || flZ < 100) continue;
       var flText = (fl.textContent || '').trim().toLowerCase();
       if (/^(view more|see more|もっと見る|詳しくはこちら|click here|tap here|download|install|play now|今すぐ|無料|ダウンロード|インストール|プレイ|始める|登録|entry|get|open)$/i.test(flText)) {
-        fl.style.setProperty('display', 'none', 'important');
+        nukeElement(fl);
+        continue;
       }
       if (fl.tagName === 'A' && fl.href && isAdUrl(fl.href) && flZ >= 1000) {
-        fl.style.setProperty('display', 'none', 'important');
+        nukeElement(fl);
       }
     }
 
@@ -1128,7 +1143,7 @@
         var sfHasLink = sf.tagName === 'A' || sf.querySelector('a[target="_blank"], a[href*="click"], a[href*="track"]');
         var sfHasImg = sf.querySelector('img') || sf.tagName === 'IMG';
         if (sfHasLink || sfHasImg) {
-          sf.style.setProperty('display', 'none', 'important');
+          nukeElement(sf);
         }
       }
     }
@@ -1148,8 +1163,7 @@
         if (odBg.indexOf('rgba') !== -1 && odBg.indexOf(', 0)') === -1) {
           var ch = od.children.length;
           if (ch === 0 || (ch === 1 && od.textContent.trim().length === 0)) {
-            od.style.setProperty('display', 'none', 'important');
-            document.body.style.setProperty('overflow', 'auto', 'important');
+            nukeElement(od);
           }
         }
       }
@@ -1164,7 +1178,7 @@
       var ch = d.children.length;
       var txt = (d.textContent || '').trim().length;
       if (ch === 0 && txt === 0 && d.offsetHeight > 10) {
-        d.style.setProperty('display', 'none', 'important');
+        nukeElement(d);
       }
     }
   }
