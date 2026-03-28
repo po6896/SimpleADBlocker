@@ -8,7 +8,7 @@
 // @include     https://*
 // @exclude     about:*
 // @exclude     chrome://*
-// @version     4.3.0
+// @version     4.4.0
 // @require     jquery
 // @require     api
 // ==/UserScript==
@@ -931,6 +931,131 @@
       }
     }
   }
+
+  /* =========================================================
+     LAYER 9: Anti-Annoyance (dirty ad tricks countermeasures)
+     ========================================================= */
+
+  /* 1. History spam blocker:
+     Ads push fake entries to history so back button loops on the ad page.
+     We override pushState/replaceState to block ad-domain redirects,
+     and fix the popstate event to skip ad entries. */
+  var realPushState = history.pushState;
+  var realReplaceState = history.replaceState;
+
+  history.pushState = new _Proxy(realPushState, {
+    apply: function (target, thisArg, args) {
+      var url = args[2];
+      if (url && isAdUrl(String(url))) return;
+      return _Reflect.apply(target, thisArg, args);
+    }
+  });
+  proxiedFns.set(history.pushState, realPushState);
+
+  history.replaceState = new _Proxy(realReplaceState, {
+    apply: function (target, thisArg, args) {
+      var url = args[2];
+      if (url && isAdUrl(String(url))) return;
+      return _Reflect.apply(target, thisArg, args);
+    }
+  });
+  proxiedFns.set(history.replaceState, realReplaceState);
+
+  /* 2. beforeunload / unload dialog blocker:
+     Some ads show "Are you sure you want to leave?" to trap users. */
+  window.addEventListener('beforeunload', function (e) {
+    e.stopImmediatePropagation();
+  }, true);
+
+  /* 3. Location redirect blocker:
+     Prevent JS from changing location to ad URLs. */
+  var _origLocationDescriptor = _getOwnPropertyDescriptor(window, 'location');
+  try {
+    var _origAssign = location.assign;
+    location.assign = new _Proxy(_origAssign, {
+      apply: function (target, thisArg, args) {
+        if (isAdUrl(String(args[0]))) return;
+        return _Reflect.apply(target, thisArg, args);
+      }
+    });
+    proxiedFns.set(location.assign, _origAssign);
+  } catch (e) {}
+
+  try {
+    var _origReplace = location.replace;
+    location.replace = new _Proxy(_origReplace, {
+      apply: function (target, thisArg, args) {
+        if (isAdUrl(String(args[0]))) return;
+        return _Reflect.apply(target, thisArg, args);
+      }
+    });
+    proxiedFns.set(location.replace, _origReplace);
+  } catch (e) {}
+
+  /* 4. Click hijack protection:
+     Block mousedown/click handlers that redirect to ad pages.
+     Only intercept suspicious patterns: links that change href on click. */
+  document.addEventListener('click', function (e) {
+    var el = e.target;
+    while (el && el !== document.body) {
+      if (el.tagName === 'A') {
+        var href = el.href || '';
+        if (isAdUrl(href)) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+        break;
+      }
+      el = el.parentElement;
+    }
+  }, true);
+
+  /* 5. Popunder/tab-under blocker:
+     Some ads open the ad in the CURRENT tab and your page in a new tab.
+     Detect by monitoring focus/blur + window.open patterns. */
+  var lastUserClick = 0;
+  document.addEventListener('mousedown', function () { lastUserClick = _Date_now(); }, true);
+  document.addEventListener('touchstart', function () { lastUserClick = _Date_now(); }, true);
+
+  proxyFn(window, 'focus', function (target, thisArg, args) {
+    return _Reflect.apply(target, thisArg, args);
+  });
+
+  /* 6. Vibration spam blocker:
+     Some ad pages abuse navigator.vibrate to annoy users. */
+  if (navigator.vibrate) {
+    navigator.vibrate = function () { return false; };
+  }
+
+  /* 7. Notification permission spam blocker:
+     Block unsolicited notification permission requests from ads. */
+  if (window.Notification && Notification.requestPermission) {
+    var origNotifPerm = Notification.requestPermission;
+    Notification.requestPermission = function () {
+      if (_Date_now() - lastUserClick > 3000) {
+        return _Promise.resolve('denied');
+      }
+      return origNotifPerm.apply(this, arguments);
+    };
+  }
+
+  /* 8. Clipboard hijack blocker:
+     Prevent ads from writing to clipboard without user action. */
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    var origClipWrite = navigator.clipboard.writeText;
+    navigator.clipboard.writeText = function (text) {
+      if (_Date_now() - lastUserClick > 1000) {
+        return _Promise.resolve();
+      }
+      return origClipWrite.call(navigator.clipboard, text);
+    };
+  }
+
+  /* 9. Scroll lock removal:
+     Ads/overlays often set body overflow:hidden to prevent scrolling. */
+  SLEX_addStyle('html, body { overflow: visible !important; scroll-behavior: auto !important; }');
+  SLEX_addStyle('html.no-scroll, body.no-scroll, html.modal-open, body.modal-open, html.overflow-hidden, body.overflow-hidden { overflow: visible !important; }');
 
   var CACHE_KEY = '_sab_f';
   var CACHE_TS_KEY = '_sab_t';
