@@ -8,7 +8,7 @@
 // @include     https://*
 // @exclude     about:*
 // @exclude     chrome://*
-// @version     4.5.0
+// @version     4.6.0
 // @require     jquery
 // @require     api
 // ==/UserScript==
@@ -76,7 +76,9 @@
   var AD_DOMAINS = [
     'googlesyndication.com', 'doubleclick.net', 'googleadservices.com',
     'adservice.google.', 'pagead2.googlesyndication.com',
-    'google-analytics.com/analytics', 'googletagmanager.com/gtag',
+    'google-analytics.com', 'googletagmanager.com',
+    'www.googletagmanager.com', 'tagmanager.google.com',
+    'ssl.google-analytics.com', 'www.google-analytics.com',
     'amazon-adsystem.com', 'aax.amazon-adsystem.com',
     'cdn.taboola.com', 'trc.taboola.com', 'api.taboola.com',
     'widgets.outbrain.com', 'outbrain.com/outbrain',
@@ -101,10 +103,27 @@
     'afi-b.com', 'affiliate-b.com',
     'accesstrade.net', 'h.accesstrade.net',
     'felmat.net',
-    'track.hubspot.com',
-    'connect.facebook.net/signals', 'pixel.facebook.com',
-    'analytics.tiktok.com',
+    'track.hubspot.com', 'js.hs-scripts.com', 'js.hs-analytics.net',
+    'connect.facebook.net', 'pixel.facebook.com', 'www.facebook.com/tr',
+    'analytics.tiktok.com', 'analytics.google.com',
     'static.ads-twitter.com', 'ads-api.twitter.com',
+    'bat.bing.com', 'clarity.ms',
+    'cdn.mxpnl.com', 'api.mixpanel.com',
+    'cdn.segment.com', 'api.segment.io',
+    'cdn.amplitude.com', 'api.amplitude.com',
+    'plausible.io', 'cdn.plausible.io',
+    'static.hotjar.com', 'script.hotjar.com',
+    'mouseflow.com', 'cdn.mouseflow.com',
+    'luckyorange.com', 'cdn.luckyorange.com',
+    'fullstory.com', 'rs.fullstory.com',
+    'heapanalytics.com', 'cdn.heapanalytics.com',
+    'js.driftt.com', 'event.driftt.com',
+    'cdn.optimizely.com',
+    'js.intercomcdn.com', 'widget.intercom.io',
+    'cdn.treasuredata.com', 'in.treasuredata.com',
+    'b.st-hatena.com',
+    'i.yimg.jp/images/analytics',
+    'yjtag.yahoo.co.jp',
     'highperformancecpmgate.com', 'toprevenuegate.com',
     'effectiveratecpm.com', 'profitablegatecpm.com',
     'traffdaq.com', 'clickadilla.com',
@@ -211,7 +230,7 @@
     return _Reflect.apply(target, thisArg, args);
   });
 
-  var _adScriptRe = /googlesyndication|doubleclick|adsbygoogle|taboola|outbrain|nend\.net|i-mobile|microad|geniee|bance|gliacloud|i2ad\.jp|pristine-creative|mavrtracktor|waqool/;
+  var _adScriptRe = /googlesyndication|doubleclick|adsbygoogle|taboola|outbrain|nend\.net|i-mobile|microad|geniee|bance|gliacloud|i2ad\.jp|pristine-creative|mavrtracktor|waqool|google-analytics|googletagmanager|gtag|facebook\.net|facebook\.com\/tr|hotjar|mouseflow|fullstory|amplitude|segment\.com|mixpanel|clarity\.ms/;
   proxyFn(document, 'write', function (target, thisArg, args) {
     if (args[0] && _adScriptRe.test(args[0])) return;
     return _Reflect.apply(target, thisArg, args);
@@ -284,6 +303,86 @@
   try { setConstant('ads_blocked', false); } catch (e) {}
   try { setConstant('adblock', false); } catch (e) {}
   try { setConstant('isAdsBlocked', false); } catch (e) {}
+
+  /* GA/GTM/Tracker neutralization:
+     Replace tracking objects with noops so inline tracking code runs
+     without errors but sends nothing. */
+  var noopFn = function () {};
+  var noopReturnThis = function () { return this; };
+  var noopArr = function () { return []; };
+
+  /* Google Analytics (ga / gtag / dataLayer) */
+  if (!window.ga) {
+    window.ga = function () {};
+    window.ga.l = _Date_now();
+    window.ga.q = [];
+    window.ga.create = noopFn;
+    window.ga.getByName = function () { return null; };
+    window.ga.getAll = noopArr;
+    window.ga.remove = noopFn;
+  }
+
+  if (!window.gtag) {
+    window.gtag = function () {};
+  }
+
+  if (!window.dataLayer) {
+    window.dataLayer = [];
+    window.dataLayer.push = function () { return this.length; };
+  } else {
+    window.dataLayer.push = function () { return this.length; };
+  }
+
+  /* Google Tag Manager container */
+  if (!window.google_tag_manager) {
+    window.google_tag_manager = {};
+  }
+
+  /* Facebook Pixel */
+  if (!window.fbq) {
+    window.fbq = noopFn;
+    window.fbq.callMethod = noopFn;
+    window.fbq.queue = [];
+    window.fbq.loaded = true;
+    window.fbq.version = '2.0';
+    window._fbq = window.fbq;
+  }
+
+  /* Twitter/X Pixel */
+  if (!window.twq) {
+    window.twq = noopFn;
+  }
+
+  /* TikTok Pixel */
+  if (!window.ttq) {
+    window.ttq = { track: noopFn, page: noopFn, identify: noopFn, instances: noopFn, debug: noopFn, on: noopFn, off: noopFn, once: noopFn, ready: noopFn, alias: noopFn, group: noopFn, enableCookie: noopFn, disableCookie: noopFn };
+  }
+
+  /* Mixpanel */
+  if (!window.mixpanel) {
+    window.mixpanel = { track: noopFn, identify: noopFn, alias: noopFn, people: { set: noopFn }, init: noopFn, register: noopFn };
+  }
+
+  /* Hotjar */
+  if (!window.hj) {
+    window.hj = noopFn;
+    window.hj.q = [];
+  }
+
+  /* Clarity */
+  if (!window.clarity) {
+    window.clarity = noopFn;
+  }
+
+  /* Segment */
+  if (!window.analytics) {
+    window.analytics = { track: noopFn, identify: noopFn, page: noopFn, group: noopFn, alias: noopFn, ready: noopFn, on: noopFn, load: noopFn };
+  }
+
+  /* Yahoo Analytics (yjtag) */
+  if (!window.yjtag) {
+    window.yjtag = noopFn;
+  }
 
   proxyFn(JSON, 'parse', function (target, thisArg, args) {
     var obj = _Reflect.apply(target, thisArg, args);
@@ -361,7 +460,7 @@
   }
 
   function removeTrackingCookies() {
-    var trackingPatterns = /^(_ga|_gid|_gat|__utm|_fbp|_fbc|fr|datr|sb|IDE|DSID|MUID|_uetsid|ANONCHK|NID|1P_JAR|__gads)/;
+    var trackingPatterns = /^(_ga|_gid|_gat|_gat_|__utm|_gcl|_gl|FPLC|FPID|_fbp|_fbc|_fbq|fr|datr|sb|wd|IDE|DSID|MUID|_uetsid|_uetvid|ANONCHK|NID|1P_JAR|__gads|__gpi|__gfp_64b|_rdt_uuid|_pin_unauth|_tt_enable_cookie|_ttp|mp_|_hp2_|_hj|_clck|_clsk|ajs_|_mkto_trk|hubspotutk|__hssc|__hssrc|__hstc|_omappvp|_omappvs|OptanonConsent|li_sugr|bcookie|AnalyticsSyncHistory|UserMatchHistory)/;
     var cookies = document.cookie.split(';');
     for (var i = 0; i < cookies.length; i++) {
       var pos = cookies[i].indexOf('=');
