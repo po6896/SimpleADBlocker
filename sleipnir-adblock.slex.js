@@ -8,7 +8,7 @@
 // @include     https://*
 // @exclude     about:*
 // @exclude     chrome://*
-// @version     4.1.0
+// @version     4.2.0
 // @require     jquery
 // @require     api
 // ==/UserScript==
@@ -112,7 +112,13 @@
     'player.gliacloud.com',
     'i2ad.jp',
     'js.ssp.bance.jp', 'ssp.bance.jp',
-    'rise.enhance.co.jp'
+    'rise.enhance.co.jp',
+    'pristine-creative.com',
+    'go.mavrtracktor.com', 'creative.mavrtracktor.com',
+    'js.waqool.com', 'waqool.com',
+    'mmmdn.net',
+    'doujinlist.com',
+    'kpia.shop'
   ];
 
   function isAdUrl(url) {
@@ -205,7 +211,7 @@
     return _Reflect.apply(target, thisArg, args);
   });
 
-  var _adScriptRe = /googlesyndication|doubleclick|adsbygoogle|taboola|outbrain|nend\.net|i-mobile|microad|geniee|bance|gliacloud|i2ad\.jp/;
+  var _adScriptRe = /googlesyndication|doubleclick|adsbygoogle|taboola|outbrain|nend\.net|i-mobile|microad|geniee|bance|gliacloud|i2ad\.jp|pristine-creative|mavrtracktor|waqool/;
   proxyFn(document, 'write', function (target, thisArg, args) {
     if (args[0] && _adScriptRe.test(args[0])) return;
     return _Reflect.apply(target, thisArg, args);
@@ -538,6 +544,19 @@
 
     '.sidebar-fix-ad',
 
+    '.advertisement', '.advt',
+    'div[id^="exo_"]', 'div[id^="av-"]',
+    'div[id^="geniee_"]', 'div[id^="smarttag_"]',
+    'div[id^="eot-"]', 'div[class*="eot-"]',
+    '.ai-viewport-1', '.ai-viewport-2', '.ai-viewport-3',
+    'iframe[src*="mavrtracktor.com"]',
+    'iframe[src*="waqool.com"]',
+    'a[href*="mavrtracktor.com"]',
+    'a[href*="kpia.shop"]',
+    'a[href*="d-read.com"]',
+    'img[src*="mmmdn.net/ad/"]',
+    'iframe.ddddnp', 'iframe.dddnp',
+
     'a[href^="https://paid.outbrain.com/network/redir?"]',
     'a[href^="https://ad.doubleclick.net/"]',
     'a[href^="https://adclick.g.doubleclick.net/"]',
@@ -583,7 +602,28 @@
       '#bnc_ad_17441',
       '.spot', '.spot--left', '.spot--right', '.spot--top', '.spot--bottom',
       '#fix_sidebar .ai_widget', '#ai_widget-2',
-      'div[id^="imobile_adspot_"]'
+      'div[id^="imobile_adspot_"]',
+      'div[id^="geniee_"]', 'div[id*="_ov1"]', 'div[id*="_ov2"]',
+      'div[id^="smarttag_"]',
+      'div[id^="eot-"]',
+      '.ai-viewport-1', '.ai-viewport-2', '.ai-viewport-3'
+    ],
+    'ddd-smart.net': [
+      'iframe.ddddnp', 'iframe.dddnp',
+      'iframe[src*="mavrtracktor.com"]',
+      'a[href*="mavrtracktor.com"]',
+      'img[src*="mmmdn.net/ad/"]',
+      'a[href*="kpia.shop"]',
+      'a[href*="d-read.com"]',
+      '.ds-5__wrapper', '.ds-5__overlay',
+      '.sidebar-rss',
+      'div[style*="z-index: 2147483647"]'
+    ],
+    'nhentai.net': [
+      '.advertisement', '.advt',
+      'div.container.advertisement',
+      'div[id^="exo_"]', 'div[id^="av-"]',
+      'a[target="_blank"][rel="nofollow noopener noreferrer"]'
     ],
     'yahoo.co.jp': [
       'div[class^="yjads"]', 'div[id^="yads"]', 'iframe[id$="_ad_frame"]',
