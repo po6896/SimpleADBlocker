@@ -6,9 +6,7 @@
 // @description:ja 軽量な広告ブロッカーです。
 // @include     http://*
 // @include     https://*
-// @exclude     about:*
-// @exclude     chrome://*
-// @version     4.8.0
+// @version     4.8.1
 // @require     jquery
 // @require     api
 // ==/UserScript==
