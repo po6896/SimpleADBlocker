@@ -1,14 +1,16 @@
 // ==UserScript==
 // @name        Simple AD Blocker
 // @name:ja     シンプル広告ブロック
-// @author      codho
-// @description A lightweight ad blocker for Sleipnir Mobile.
-// @description:ja 軽量な広告ブロッカーです。
+// @author      おそうじロボ
+// @description A lightweight ad blocker. Blocks ads, trackers, popups, and annoyances.
+// @description:ja 広告、少し減らします。
 // @include     http://*
 // @include     https://*
 // @version     4.8.1
 // @require     jquery
 // @require     api
+// @history     4.8.1 Initial gallery release
+// @history:ja  4.8.1 ギャラリー初回リリース
 // ==/UserScript==
 
 (function () {
