@@ -8,7 +8,7 @@
 // @description:ja  広告ネットワーク、トラッカー、ポップアップをブロックします。
 // @include         http://*
 // @include         https://*
-// @version         5.0.0
+// @version         5.2.0
 // @history         4.8.1 Initial gallery release.
 // @history:ja      4.8.1 ギャラリー初回リリース。
 // @require         api
@@ -293,6 +293,261 @@
     if (_adScriptRe.test(code)) return;
     return _Reflect.apply(target, thisArg, args);
   });
+
+  /* =================================================================
+     Plugging known blind spots
+     ================================================================= */
+
+  /* 0. iframe contentWindow contamination:
+     When ad scripts create an iframe to get clean un-proxied APIs,
+     we infect the iframe's APIs too. Defends against #12/#23. */
+  var origAppendChild = Node.prototype.appendChild;
+  var origInsertBefore = Node.prototype.insertBefore;
+
+  function contaminateIframe(iframe) {
+    try {
+      var cw = iframe.contentWindow;
+      var cd = iframe.contentDocument;
+      if (!cw || !cd) return;
+      if (cw._sab) return;
+      cw._sab = true;
+      if (cw.fetch) {
+        var cwFetch = cw.fetch;
+        cw.fetch = function () {
+          var u = (typeof arguments[0] === 'string') ? arguments[0] : (arguments[0] && arguments[0].url) || '';
+          if (isAdUrl(u)) return _Promise.resolve(new _Response('', { status: 200 }));
+          return cwFetch.apply(this, arguments);
+        };
+      }
+      if (cw.XMLHttpRequest) {
+        var CwXHR = cw.XMLHttpRequest;
+        var cwOpen = CwXHR.prototype.open;
+        CwXHR.prototype.open = function () {
+          if (isAdUrl(arguments[1])) { this._b = true; return; }
+          return cwOpen.apply(this, arguments);
+        };
+        var cwSend = CwXHR.prototype.send;
+        CwXHR.prototype.send = function () {
+          if (this._b) return;
+          return cwSend.apply(this, arguments);
+        };
+      }
+      if (cd.createElement) {
+        var cwCE = cd.createElement.bind(cd);
+        cd.createElement = function (tag) {
+          var el = cwCE(tag);
+          var tl = tag.toLowerCase();
+          if (tl === 'script' || tl === 'iframe') {
+            try {
+              var p = tl === 'script' ? cw.HTMLScriptElement.prototype : cw.HTMLIFrameElement.prototype;
+              var d = _getOwnPropertyDescriptor(p, 'src');
+              if (d && d.set) {
+                var oS = d.set; var oG = d.get;
+                _defineProperty(el, 'src', {
+                  get: function () { return oG ? oG.call(this) : this.getAttribute('src'); },
+                  set: function (v) { if (isAdUrl(v)) return; if (oS) oS.call(this, v); },
+                  configurable: true
+                });
+              }
+            } catch (ex) {}
+          }
+          return el;
+        };
+      }
+      if (cw.open) { cw.open = function () { if (isAdUrl(String(arguments[0] || ''))) return _fakeWindow; return window.open.apply(window, arguments); }; }
+    } catch (e) {}
+  }
+
+  Node.prototype.appendChild = new _Proxy(origAppendChild, {
+    apply: function (target, thisArg, args) {
+      var result = _Reflect.apply(target, thisArg, args);
+      var n = args[0];
+      if (n && n.tagName === 'IFRAME') {
+        _setTimeout(function () { contaminateIframe(n); }, 0);
+        n.addEventListener('load', function () { contaminateIframe(n); });
+      }
+      return result;
+    }
+  });
+  proxiedFns.set(Node.prototype.appendChild, origAppendChild);
+
+  Node.prototype.insertBefore = new _Proxy(origInsertBefore, {
+    apply: function (target, thisArg, args) {
+      var result = _Reflect.apply(target, thisArg, args);
+      var n = args[0];
+      if (n && n.tagName === 'IFRAME') {
+        _setTimeout(function () { contaminateIframe(n); }, 0);
+        n.addEventListener('load', function () { contaminateIframe(n); });
+      }
+      return result;
+    }
+  });
+  proxiedFns.set(Node.prototype.insertBefore, origInsertBefore);
+
+  _setTimeout(function () {
+    var ifs = document.querySelectorAll('iframe');
+    for (var i = 0; i < ifs.length; i++) contaminateIframe(ifs[i]);
+  }, 100);
+
+  /* setAttribute interception (covers #20 blind spot) */
+  var origSetAttribute = Element.prototype.setAttribute;
+  Element.prototype.setAttribute = new _Proxy(origSetAttribute, {
+    apply: function (target, thisArg, args) {
+      var attr = String(args[0]).toLowerCase();
+      if ((attr === 'src' || attr === 'href') && isAdUrl(String(args[1] || ''))) {
+        var tag = thisArg.tagName;
+        if (tag === 'SCRIPT' || tag === 'IFRAME' || tag === 'IMG') return;
+      }
+      return _Reflect.apply(target, thisArg, args);
+    }
+  });
+  proxiedFns.set(Element.prototype.setAttribute, origSetAttribute);
+
+  /* iframe srcdoc interception (#11) */
+  try {
+    var srcdocDesc = _getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'srcdoc');
+    if (srcdocDesc && srcdocDesc.set) {
+      var origSrcdocSet = srcdocDesc.set;
+      _defineProperty(HTMLIFrameElement.prototype, 'srcdoc', {
+        get: srcdocDesc.get,
+        set: function (val) {
+          if (val && (_adScriptRe.test(val) || isAdUrl(val))) return;
+          origSrcdocSet.call(this, val);
+        },
+        configurable: true
+      });
+    }
+  } catch (e) {}
+
+  /* 1. Shadow DOM interception:
+     Force attachShadow to mode:'open' so we can scan inside.
+     Closed shadow roots are invisible to querySelector/MutationObserver. */
+  try {
+    var origAttachShadow = Element.prototype.attachShadow;
+    Element.prototype.attachShadow = new _Proxy(origAttachShadow, {
+      apply: function (target, thisArg, args) {
+        if (args[0] && args[0].mode === 'closed') {
+          args[0] = _Object.assign({}, args[0], { mode: 'open' });
+        }
+        var shadowRoot = _Reflect.apply(target, thisArg, args);
+        /* Monitor shadow root for ad injection */
+        if (_MutationObserver && shadowRoot) {
+          new _MutationObserver(function (mutations) {
+            for (var i = 0; i < mutations.length; i++) {
+              var nodes = mutations[i].addedNodes;
+              for (var j = 0; j < nodes.length; j++) {
+                var node = nodes[j];
+                if (node.nodeType !== 1) continue;
+                if (node.tagName === 'IFRAME') {
+                  var src = node.src || node.getAttribute('src') || '';
+                  if (isAdUrl(src)) { node.src = 'about:blank'; try { node.parentNode.removeChild(node); } catch (e) {} }
+                }
+              }
+            }
+          }).observe(shadowRoot, { childList: true, subtree: true });
+        }
+        return shadowRoot;
+      }
+    });
+    proxiedFns.set(Element.prototype.attachShadow, origAttachShadow);
+  } catch (e) {}
+
+  /* 2. WebSocket interception:
+     Block connections to known ad domains. */
+  if (typeof WebSocket !== 'undefined') {
+    var OrigWebSocket = WebSocket;
+    window.WebSocket = new _Proxy(OrigWebSocket, {
+      construct: function (target, args) {
+        var wsUrl = String(args[0] || '');
+        if (isAdUrl(wsUrl)) {
+          return { send: function(){}, close: function(){}, addEventListener: function(){},
+                   readyState: 3, onopen: null, onmessage: null, onerror: null, onclose: null };
+        }
+        return _Reflect.construct(target, args);
+      }
+    });
+    proxiedFns.set(window.WebSocket, OrigWebSocket);
+  }
+
+  /* 3. Service Worker registration blocking for ad domains */
+  if (navigator.serviceWorker && navigator.serviceWorker.register) {
+    var origSWRegister = navigator.serviceWorker.register;
+    navigator.serviceWorker.register = new _Proxy(origSWRegister, {
+      apply: function (target, thisArg, args) {
+        var swUrl = String(args[0] || '');
+        if (isAdUrl(swUrl)) return _Promise.reject(new Error('blocked'));
+        return _Reflect.apply(target, thisArg, args);
+      }
+    });
+    proxiedFns.set(navigator.serviceWorker.register, origSWRegister);
+  }
+
+  /* 4. navigator.sendBeacon interception */
+  if (navigator.sendBeacon) {
+    var origSendBeacon = navigator.sendBeacon;
+    navigator.sendBeacon = new _Proxy(origSendBeacon, {
+      apply: function (target, thisArg, args) {
+        if (isAdUrl(String(args[0] || ''))) return true;
+        return _Reflect.apply(target, thisArg, args);
+      }
+    });
+    proxiedFns.set(navigator.sendBeacon, origSendBeacon);
+  }
+
+  /* 5. new Image() src interception:
+     document.createElement('img') is covered, but new Image() bypasses it. */
+  if (typeof Image !== 'undefined') {
+    var OrigImage = Image;
+    window.Image = new _Proxy(OrigImage, {
+      construct: function (target, args) {
+        var img = _Reflect.construct(target, args);
+        var imgDesc = _getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
+        if (imgDesc && imgDesc.set) {
+          var origImgSet = imgDesc.set;
+          var origImgGet = imgDesc.get;
+          _defineProperty(img, 'src', {
+            get: function () { return origImgGet ? origImgGet.call(this) : ''; },
+            set: function (val) {
+              if (isAdUrl(val)) return;
+              origImgSet.call(this, val);
+            },
+            configurable: true
+          });
+        }
+        return img;
+      }
+    });
+    proxiedFns.set(window.Image, OrigImage);
+  }
+
+  /* 6. IntersectionObserver-triggered ad injection:
+     Add scroll-based heuristic scanning, not just timer-based. */
+  var scrollScanTimer = null;
+  window.addEventListener('scroll', function () {
+    _clearTimeout(scrollScanTimer);
+    scrollScanTimer = _setTimeout(function () {
+      if (typeof heuristicScan === 'function') heuristicScan();
+    }, 300);
+  }, { passive: true });
+
+  /* 7. Canvas click hijack:
+     Block canvas onclick that opens ad URLs. */
+  document.addEventListener('click', function (e) {
+    if (e.target && e.target.tagName === 'CANVAS') {
+      /* Canvas click going to window.open is already blocked by popup blocker.
+         But check if there's an onclick redirecting to ad URL */
+      var onclick = e.target.getAttribute('onclick') || '';
+      if (isAdUrl(onclick)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }
+  }, true);
+
+  /* 8. Self-healing ad detection:
+     Monitor for elements re-appearing after removal. */
+  var nukedSelectors = [];
+  var origNukeElement;
 
   function abortOnRead(chain) {
     var token = String(Math.random()).slice(2);
@@ -995,6 +1250,14 @@
   }
 
   function nukeElement(el) {
+    /* Record selector for self-healing detection */
+    try {
+      var sig = '';
+      if (el.id) sig = '#' + el.id;
+      else if (el.className && typeof el.className === 'string') sig = '.' + el.className.split(/\s+/)[0];
+      if (sig && nukedSelectors.indexOf(sig) === -1 && nukedSelectors.length < 100) nukedSelectors.push(sig);
+    } catch (e) {}
+
     try {
       el.style.setProperty('display', 'none', 'important');
       el.style.setProperty('visibility', 'hidden', 'important');
@@ -1175,10 +1438,41 @@
       var d = divs[i];
       if (d.style.display === 'none') continue;
       if (isSafeElement(d)) continue;
-      var ch = d.children.length;
-      var txt = (d.textContent || '').trim().length;
-      if (ch === 0 && txt === 0 && d.offsetHeight > 10) {
+      var dch = d.children.length;
+      var dtxt = (d.textContent || '').trim().length;
+      if (dch === 0 && dtxt === 0 && d.offsetHeight > 10) {
         nukeElement(d);
+      }
+    }
+
+    /* 9. Self-healing ad re-detection:
+       If we previously nuked an element and it re-appears, nuke again. */
+    for (var i = 0; i < nukedSelectors.length; i++) {
+      try {
+        var reborn = document.querySelectorAll(nukedSelectors[i]);
+        for (var j = 0; j < reborn.length; j++) {
+          if (reborn[j].offsetHeight > 0 || reborn[j].offsetWidth > 0) {
+            nukeElement(reborn[j]);
+          }
+        }
+      } catch (e) {}
+    }
+
+    /* 10. Scan open Shadow DOMs for ad content */
+    var allElements = document.querySelectorAll('*');
+    for (var i = 0; i < allElements.length; i++) {
+      var sr = allElements[i].shadowRoot;
+      if (!sr) continue;
+      var srIframes = sr.querySelectorAll('iframe');
+      for (var j = 0; j < srIframes.length; j++) {
+        var srSrc = srIframes[j].src || srIframes[j].getAttribute('src') || '';
+        if (isAdUrl(srSrc)) {
+          try { srIframes[j].parentNode.removeChild(srIframes[j]); } catch (e) {}
+        }
+      }
+      var srAds = sr.querySelectorAll('ins.adsbygoogle, [class*="ad-banner"], [class*="ad-container"]');
+      for (var j = 0; j < srAds.length; j++) {
+        try { srAds[j].parentNode.removeChild(srAds[j]); } catch (e) {}
       }
     }
   }
@@ -1643,9 +1937,11 @@
   }, 5000);
 
   _setTimeout(heuristicScan, 8000);
+  _setTimeout(heuristicScan, 15000);
+  _setTimeout(heuristicScan, 30000);
 
   _setTimeout(loadExternalFilters, 2000);
 
-  console.log('[Simple AD Blocker] loaded');
+  void 0;
 
 })();
