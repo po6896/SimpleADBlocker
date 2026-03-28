@@ -8,7 +8,7 @@
 // @include     https://*
 // @exclude     about:*
 // @exclude     chrome://*
-// @version     4.6.0
+// @version     4.7.0
 // @require     jquery
 // @require     api
 // ==/UserScript==
@@ -716,13 +716,18 @@
       'a[href*="d-read.com"]',
       '.ds-5__wrapper', '.ds-5__overlay',
       '.sidebar-rss',
-      'div[style*="z-index: 2147483647"]'
+      'div[style*="z-index: 2147483647"]',
+      'div[style*="position: fixed"]',
+      'iframe[style*="position: fixed"]'
     ],
     'nhentai.net': [
       '.advertisement', '.advt',
       'div.container.advertisement',
       'div[id^="exo_"]', 'div[id^="av-"]',
-      'a[target="_blank"][rel="nofollow noopener noreferrer"]'
+      'a[target="_blank"][rel="nofollow noopener noreferrer"]',
+      'div[style*="position: fixed"]',
+      'div[style*="z-index: 2147483647"]',
+      'iframe[style*="position: fixed"]'
     ],
     'yahoo.co.jp': [
       'div[class^="yjads"]', 'div[id^="yads"]', 'iframe[id$="_ad_frame"]',
@@ -1017,7 +1022,91 @@
       }
     }
 
-    /* 4. Empty ad placeholder divs (height but no visible content) */
+    /* 4. Close-button overlay detection:
+       Floating elements with a close/× button are almost always ads. */
+    var fixedEls = document.querySelectorAll('div, span, aside');
+    for (var i = 0; i < fixedEls.length; i++) {
+      var el2 = fixedEls[i];
+      if (isSafeElement(el2)) continue;
+      if (el2.style.display === 'none') continue;
+      if (el2.id === '_sab_diag') continue;
+      var cs2;
+      try { cs2 = _origGetComputedStyle.call(window, el2); } catch (e) { continue; }
+      if (cs2.position !== 'fixed' && cs2.position !== 'sticky') continue;
+      var z2 = parseInt(cs2.zIndex, 10);
+      if (isNaN(z2) || z2 < 100) continue;
+      var hasClose = el2.querySelector('[class*="close"], [class*="dismiss"], [aria-label*="close"], [aria-label*="Close"], [onclick*="close"], [onclick*="display"], [onclick*="none"]');
+      if (!hasClose) {
+        var innerText = el2.textContent || '';
+        if (innerText.indexOf('\u00D7') !== -1 || innerText.indexOf('\u2715') !== -1 || innerText.indexOf('\u2716') !== -1) hasClose = true;
+      }
+      if (hasClose) {
+        el2.style.setProperty('display', 'none', 'important');
+        document.body.style.setProperty('overflow', 'auto', 'important');
+      }
+    }
+
+    /* 5. "VIEW MORE" / "See More" floating ad buttons */
+    var allFixedLinks = document.querySelectorAll('a, div, span');
+    for (var i = 0; i < allFixedLinks.length; i++) {
+      var fl = allFixedLinks[i];
+      var flCs;
+      try { flCs = _origGetComputedStyle.call(window, fl); } catch (e) { continue; }
+      if (flCs.position !== 'fixed') continue;
+      var flZ = parseInt(flCs.zIndex, 10);
+      if (isNaN(flZ) || flZ < 100) continue;
+      var flText = (fl.textContent || '').trim().toLowerCase();
+      if (/^(view more|see more|もっと見る|詳しくはこちら|click here|tap here|download|install|play now|今すぐ|無料|ダウンロード|インストール|プレイ|始める|登録|entry|get|open)$/i.test(flText)) {
+        fl.style.setProperty('display', 'none', 'important');
+      }
+      if (fl.tagName === 'A' && fl.href && isAdUrl(fl.href) && flZ >= 1000) {
+        fl.style.setProperty('display', 'none', 'important');
+      }
+    }
+
+    /* 6. Floating circular/small ad widgets (like ddd-smart.net mascot overlay) */
+    var smallFixedEls = document.querySelectorAll('div, img, a');
+    for (var i = 0; i < smallFixedEls.length; i++) {
+      var sf = smallFixedEls[i];
+      if (isSafeElement(sf)) continue;
+      var sfCs;
+      try { sfCs = _origGetComputedStyle.call(window, sf); } catch (e) { continue; }
+      if (sfCs.position !== 'fixed') continue;
+      var sfZ = parseInt(sfCs.zIndex, 10);
+      if (isNaN(sfZ) || sfZ < 9999) continue;
+      var sfRect = sf.getBoundingClientRect();
+      if (sfRect.width < 200 && sfRect.height < 200 && sfRect.width > 30) {
+        var sfHasLink = sf.tagName === 'A' || sf.querySelector('a[target="_blank"], a[href*="click"], a[href*="track"]');
+        var sfHasImg = sf.querySelector('img') || sf.tagName === 'IMG';
+        if (sfHasLink || sfHasImg) {
+          sf.style.setProperty('display', 'none', 'important');
+        }
+      }
+    }
+
+    /* 7. Background overlay / backdrop removal (semi-transparent fullscreen divs behind ad popups) */
+    var overlayDivs = document.querySelectorAll('div');
+    for (var i = 0; i < overlayDivs.length; i++) {
+      var od = overlayDivs[i];
+      var odCs;
+      try { odCs = _origGetComputedStyle.call(window, od); } catch (e) { continue; }
+      if (odCs.position !== 'fixed') continue;
+      var odZ = parseInt(odCs.zIndex, 10);
+      if (isNaN(odZ) || odZ < 999) continue;
+      var odRect = od.getBoundingClientRect();
+      if (odRect.width >= vw * 0.95 && odRect.height >= vh * 0.95) {
+        var odBg = odCs.backgroundColor || '';
+        if (odBg.indexOf('rgba') !== -1 && odBg.indexOf(', 0)') === -1) {
+          var ch = od.children.length;
+          if (ch === 0 || (ch === 1 && od.textContent.trim().length === 0)) {
+            od.style.setProperty('display', 'none', 'important');
+            document.body.style.setProperty('overflow', 'auto', 'important');
+          }
+        }
+      }
+    }
+
+    /* 8. Empty ad placeholder divs (height but no visible content) */
     var divs = document.querySelectorAll('div[id*="ad"], div[class*="ad-"], div[class*="_ad"]');
     for (var i = 0; i < divs.length; i++) {
       var d = divs[i];
