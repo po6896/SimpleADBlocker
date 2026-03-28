@@ -8,7 +8,7 @@
 // @include     https://*
 // @exclude     about:*
 // @exclude     chrome://*
-// @version     4.2.0
+// @version     4.3.0
 // @require     jquery
 // @require     api
 // ==/UserScript==
@@ -771,11 +771,14 @@
 
   var debounceTimer = null;
 
+  var heuristicTimer = null;
   function onDomChanged() {
     _clearTimeout(debounceTimer);
     debounceTimer = _setTimeout(function () {
       removeAdIframes();
     }, 200);
+    _clearTimeout(heuristicTimer);
+    heuristicTimer = _setTimeout(heuristicScan, 1000);
   }
 
   if (_MutationObserver) {
@@ -804,6 +807,128 @@
           if (nodes.length > 0) { onDomChanged(); return; }
         }
       }).observe(target, { childList: true, subtree: true });
+    }
+  }
+
+  /* =========================================================
+     LAYER 8: Heuristic Ad Detection
+     Catches unknown ads by behavior/pattern, not by name.
+     ========================================================= */
+
+  var AD_SIZES = [
+    [300, 250], [336, 280], [728, 90], [300, 600], [320, 50],
+    [320, 100], [970, 250], [970, 90], [468, 60], [234, 60],
+    [120, 600], [160, 600], [250, 250], [200, 200], [300, 50],
+    [320, 480], [480, 320], [300, 1050], [970, 66], [1, 1]
+  ];
+
+  function isAdSize(w, h) {
+    for (var i = 0; i < AD_SIZES.length; i++) {
+      if (Math.abs(w - AD_SIZES[i][0]) < 5 && Math.abs(h - AD_SIZES[i][1]) < 5) return true;
+    }
+    return false;
+  }
+
+  var SAFE_TAGS = { 'HTML': 1, 'BODY': 1, 'HEAD': 1, 'HEADER': 1, 'NAV': 1,
+    'MAIN': 1, 'ARTICLE': 1, 'SECTION': 1, 'FOOTER': 1, 'FORM': 1,
+    'INPUT': 1, 'BUTTON': 1, 'SELECT': 1, 'TEXTAREA': 1, 'TABLE': 1,
+    'VIDEO': 1, 'AUDIO': 1, 'CANVAS': 1, 'SVG': 1, 'P': 1, 'H1': 1,
+    'H2': 1, 'H3': 1, 'H4': 1, 'UL': 1, 'OL': 1 };
+
+  function isSafeElement(el) {
+    if (SAFE_TAGS[el.tagName]) return true;
+    if (el.id === '_sab_diag') return true;
+    if (el.getAttribute && el.getAttribute('contenteditable')) return true;
+    return false;
+  }
+
+  function heuristicScan() {
+    if (!document.body) return;
+
+    /* 1. Cross-origin iframes with ad-like sizes */
+    var iframes = document.querySelectorAll('iframe');
+    for (var i = 0; i < iframes.length; i++) {
+      var ifr = iframes[i];
+      if (ifr.style.display === 'none') continue;
+      var src = ifr.src || ifr.getAttribute('src') || '';
+      if (!src || src === 'about:blank') continue;
+      try {
+        var ifrHost = new URL(src, location.href).hostname;
+        if (ifrHost === hostname) continue;
+      } catch (e) { continue; }
+      var w = ifr.offsetWidth || parseInt(ifr.width, 10) || 0;
+      var h = ifr.offsetHeight || parseInt(ifr.height, 10) || 0;
+      if (isAdSize(w, h) || (w > 0 && h > 0 && w <= 970 && h <= 280 && isAdUrl(src))) {
+        ifr.style.display = 'none';
+      }
+    }
+
+    /* 2. Fixed/sticky overlays with high z-index (popups, interstitials) */
+    var allEls = document.querySelectorAll('div, aside, section');
+    var vw = window.innerWidth || document.documentElement.clientWidth;
+    var vh = window.innerHeight || document.documentElement.clientHeight;
+    for (var i = 0; i < allEls.length; i++) {
+      var el = allEls[i];
+      if (isSafeElement(el)) continue;
+      if (el.style.display === 'none') continue;
+      var cs;
+      try { cs = _origGetComputedStyle.call(window, el); } catch (e) { continue; }
+      if (cs.position !== 'fixed' && cs.position !== 'sticky') continue;
+      var z = parseInt(cs.zIndex, 10);
+      if (isNaN(z) || z < 999) continue;
+      var rect = el.getBoundingClientRect();
+      /* Large overlay covering most of screen */
+      if (rect.width > vw * 0.8 && rect.height > vh * 0.3) {
+        /* Check if it looks like an ad (has iframes, images, or links to external) */
+        var hasAdContent = el.querySelector('iframe, ins.adsbygoogle, [class*="ad"], a[target="_blank"]');
+        var textLen = (el.textContent || '').trim().length;
+        if (hasAdContent || textLen < 50) {
+          el.style.setProperty('display', 'none', 'important');
+          document.body.style.setProperty('overflow', 'auto', 'important');
+        }
+      }
+      /* Bottom/top sticky banner */
+      if ((rect.top <= 5 || rect.bottom >= vh - 5) && rect.height < 120 && rect.width > vw * 0.5) {
+        var innerLinks = el.querySelectorAll('a[target="_blank"], a[href*="click"], a[href*="track"]');
+        if (innerLinks.length > 0) {
+          el.style.setProperty('display', 'none', 'important');
+        }
+      }
+    }
+
+    /* 3. External-link image banners (affiliate/ad banners) */
+    var links = document.querySelectorAll('a[target="_blank"]');
+    for (var i = 0; i < links.length; i++) {
+      var a = links[i];
+      var href = a.href || '';
+      try {
+        var linkHost = new URL(href, location.href).hostname;
+        if (linkHost === hostname) continue;
+      } catch (e) { continue; }
+      if (!isAdUrl(href)) continue;
+      var imgs = a.querySelectorAll('img');
+      for (var j = 0; j < imgs.length; j++) {
+        var img = imgs[j];
+        var iw = img.naturalWidth || img.offsetWidth || 0;
+        var ih = img.naturalHeight || img.offsetHeight || 0;
+        if (isAdSize(iw, ih) || (iw > 100 && ih > 50)) {
+          a.style.setProperty('display', 'none', 'important');
+          break;
+        }
+      }
+    }
+
+    /* 4. Empty ad placeholder divs (height but no visible content) */
+    var divs = document.querySelectorAll('div[id*="ad"], div[class*="ad-"], div[class*="_ad"]');
+    for (var i = 0; i < divs.length; i++) {
+      var d = divs[i];
+      if (d.style.display === 'none') continue;
+      if (isSafeElement(d)) continue;
+      var ch = d.children.length;
+      var txt = (d.textContent || '').trim().length;
+      if (ch === 0 && txt === 0 && d.offsetHeight > 10) {
+        d.style.setProperty('display', 'none', 'important');
+      }
     }
   }
 
@@ -860,13 +985,17 @@
     cleanPRLabels();
     bustOverlay();
     createDecoys();
+    heuristicScan();
   }, 1500);
 
   _setTimeout(function () {
     removeAdIframes();
     cleanPRLabels();
     removeTrackingCookies();
+    heuristicScan();
   }, 5000);
+
+  _setTimeout(heuristicScan, 8000);
 
   _setTimeout(loadExternalFilters, 2000);
 
