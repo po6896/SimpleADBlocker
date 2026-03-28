@@ -8,7 +8,7 @@
 // @description:ja  広告ネットワーク、トラッカー、ポップアップをブロックします。
 // @include         http://*
 // @include         https://*
-// @version         4.8.1
+// @version         4.9.0
 // @history         4.8.1 Initial gallery release.
 // @history:ja      4.8.1 ギャラリー初回リリース。
 // @require         api
@@ -996,6 +996,7 @@
 
   function heuristicScan() {
     if (!document.body) return;
+    forceUnlockScroll();
 
     /* 1. Cross-origin iframes with ad-like sizes */
     var iframes = document.querySelectorAll('iframe');
@@ -1376,10 +1377,93 @@
     };
   }
 
-  /* 9. Scroll lock removal:
-     Ads/overlays often set body overflow:hidden to prevent scrolling. */
-  SLEX_addStyle('html, body { overflow: visible !important; scroll-behavior: auto !important; }');
-  SLEX_addStyle('html.no-scroll, body.no-scroll, html.modal-open, body.modal-open, html.overflow-hidden, body.overflow-hidden { overflow: visible !important; }');
+  /* 9. Scroll/touch lock removal (comprehensive):
+     Ads/overlays block scrolling via overflow:hidden, touch-action:none,
+     pointer-events:none, position:fixed on body, or class-based locks.
+     We fight back with CSS, JS property interception, and periodic cleanup. */
+  SLEX_addStyle([
+    'html, body { overflow: visible !important; overflow-y: auto !important; scroll-behavior: auto !important; touch-action: auto !important; pointer-events: auto !important; position: static !important; width: auto !important; height: auto !important; }',
+    'html.no-scroll, body.no-scroll, html.modal-open, body.modal-open, html.overflow-hidden, body.overflow-hidden, html.is-locked, body.is-locked, html.noscroll, body.noscroll, html.fixed, body.fixed { overflow: visible !important; overflow-y: auto !important; position: static !important; touch-action: auto !important; }',
+    'html[style*="overflow: hidden"], body[style*="overflow: hidden"], html[style*="overflow:hidden"], body[style*="overflow:hidden"] { overflow: visible !important; overflow-y: auto !important; }',
+    'html[style*="position: fixed"], body[style*="position: fixed"], html[style*="position:fixed"], body[style*="position:fixed"] { position: static !important; }',
+    'html[style*="touch-action"], body[style*="touch-action"] { touch-action: auto !important; }',
+    'html[style*="pointer-events: none"], body[style*="pointer-events: none"] { pointer-events: auto !important; }'
+  ].join('\n'));
+
+  /* JS-level scroll lock cleanup: periodically force-remove inline locks */
+  function forceUnlockScroll() {
+    var html = document.documentElement;
+    var body = document.body;
+    if (!body) return;
+
+    var locked = false;
+    var targets = [html, body];
+    for (var i = 0; i < targets.length; i++) {
+      var t = targets[i];
+      if (!t || !t.style) continue;
+      if (t.style.overflow === 'hidden' || t.style.overflowY === 'hidden') {
+        t.style.setProperty('overflow', 'visible', 'important');
+        t.style.setProperty('overflow-y', 'auto', 'important');
+        locked = true;
+      }
+      if (t.style.position === 'fixed') {
+        t.style.setProperty('position', 'static', 'important');
+        locked = true;
+      }
+      if (t.style.touchAction === 'none') {
+        t.style.setProperty('touch-action', 'auto', 'important');
+        locked = true;
+      }
+      if (t.style.pointerEvents === 'none') {
+        t.style.setProperty('pointer-events', 'auto', 'important');
+        locked = true;
+      }
+    }
+
+    /* Remove scroll-blocking classes */
+    var lockClasses = ['no-scroll', 'noscroll', 'modal-open', 'overflow-hidden', 'is-locked', 'fixed', 'scroll-lock', 'body-lock', 'no-overflow'];
+    for (var i = 0; i < targets.length; i++) {
+      if (!targets[i] || !targets[i].classList) continue;
+      for (var j = 0; j < lockClasses.length; j++) {
+        if (targets[i].classList.contains(lockClasses[j])) {
+          targets[i].classList.remove(lockClasses[j]);
+          locked = true;
+        }
+      }
+    }
+
+    return locked;
+  }
+
+  /* Intercept body/html style.overflow setter to prevent re-locking */
+  function guardOverflow(el) {
+    if (!el) return;
+    var origDescriptor = _getOwnPropertyDescriptor(el.style.__proto__ || CSSStyleDeclaration.prototype, 'overflow');
+    if (!origDescriptor || !origDescriptor.set) return;
+    var origSet = origDescriptor.set;
+    try {
+      _defineProperty(el.style, 'overflow', {
+        get: origDescriptor.get ? function () { return origDescriptor.get.call(this); } : undefined,
+        set: function (val) {
+          if (val === 'hidden') return;
+          origSet.call(this, val);
+        },
+        configurable: true
+      });
+    } catch (e) {}
+  }
+
+  try { guardOverflow(document.documentElement); } catch (e) {}
+  try { guardOverflow(document.body); } catch (e) {}
+
+  /* Periodic scroll unlock (catches delayed locks from ad scripts) */
+  _setTimeout(forceUnlockScroll, 500);
+  _setTimeout(forceUnlockScroll, 1500);
+  _setTimeout(forceUnlockScroll, 3000);
+  _setTimeout(forceUnlockScroll, 5000);
+  _setTimeout(forceUnlockScroll, 8000);
+
+  /* Also run on every heuristic scan */
 
   /* =========================================================
      LAYER 10: Antenna site auto-redirect bypass
