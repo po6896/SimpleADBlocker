@@ -8,7 +8,7 @@
 // @include     https://*
 // @exclude     about:*
 // @exclude     chrome://*
-// @version     4.7.0
+// @version     4.8.0
 // @require     jquery
 // @require     api
 // ==/UserScript==
@@ -213,20 +213,66 @@
   });
   proxiedFns.set(document.createElement, origCreateElement);
 
+  var _lastUserInteraction = 0;
+  var _openCount = 0;
+  var _openResetTimer = null;
+
+  function trackUserInteraction() { _lastUserInteraction = _Date_now(); }
+  document.addEventListener('click', trackUserInteraction, true);
+  document.addEventListener('mousedown', trackUserInteraction, true);
+  document.addEventListener('touchstart', trackUserInteraction, true);
+  document.addEventListener('touchend', trackUserInteraction, true);
+  document.addEventListener('keydown', trackUserInteraction, true);
+
+  var _fakeWindow = new _Proxy(window, {
+    get: function (t, prop) {
+      if (prop === 'closed') return false;
+      if (prop === 'close') return function () {};
+      if (prop === 'focus') return function () {};
+      if (prop === 'blur') return function () {};
+      if (prop === 'postMessage') return function () {};
+      if (prop === 'document') return document.implementation.createHTMLDocument('');
+      if (prop === 'location') return {};
+      var r = t[prop];
+      return typeof r === 'function' ? function () {} : r;
+    },
+    set: function () { return true; }
+  });
+
   proxyFn(window, 'open', function (target, thisArg, args) {
-    var url = args[0];
-    if (isAdUrl(url)) {
-      return new _Proxy(window, {
-        get: function (t, prop) {
-          if (prop === 'closed') return false;
-          if (prop === 'close') return function () {};
-          if (prop === 'focus') return function () {};
-          if (prop === 'document') return document.implementation.createHTMLDocument('');
-          var r = t[prop];
-          return typeof r === 'function' ? function () {} : r;
-        }
-      });
+    var url = String(args[0] || '');
+
+    /* Always block known ad URLs */
+    if (isAdUrl(url)) return _fakeWindow;
+
+    /* Rate limit: max 1 popup per user interaction */
+    _openCount++;
+    if (!_openResetTimer) {
+      _openResetTimer = _setTimeout(function () { _openCount = 0; _openResetTimer = null; }, 2000);
     }
+
+    /* Block if: no recent user interaction (within 1 second) */
+    var timeSinceUser = _Date_now() - _lastUserInteraction;
+    if (timeSinceUser > 1000) return _fakeWindow;
+
+    /* Block if: more than 1 popup per interaction */
+    if (_openCount > 1) return _fakeWindow;
+
+    /* Block if: trying to open a different domain (likely ad/popunder) */
+    if (url && url.indexOf('http') === 0) {
+      try {
+        var openHost = new URL(url).hostname;
+        if (openHost !== hostname) {
+          /* Allow same parent domain (e.g. sub.example.com -> example.com) */
+          var parts1 = hostname.split('.');
+          var parts2 = openHost.split('.');
+          var base1 = parts1.slice(-2).join('.');
+          var base2 = parts2.slice(-2).join('.');
+          if (base1 !== base2) return _fakeWindow;
+        }
+      } catch (e) {}
+    }
+
     return _Reflect.apply(target, thisArg, args);
   });
 
@@ -1227,31 +1273,72 @@
     proxiedFns.set(location.replace, _origReplace);
   } catch (e) {}
 
-  /* 4. Click hijack protection:
-     Block mousedown/click handlers that redirect to ad pages.
-     Only intercept suspicious patterns: links that change href on click. */
+  /* 4. Click hijack protection + multi-tab-open blocker:
+     - Block clicks on ad links
+     - Prevent "click anywhere opens new tab" attacks
+     - Block invisible overlay links that steal clicks */
+  var _clickOpenAllowed = false;
+
   document.addEventListener('click', function (e) {
     var el = e.target;
-    while (el && el !== document.body) {
-      if (el.tagName === 'A') {
-        var href = el.href || '';
+
+    /* Check for invisible overlay hijack: transparent element covering the page */
+    if (el && el.tagName === 'A') {
+      var elCs;
+      try { elCs = _origGetComputedStyle.call(window, el); } catch (ex) {}
+      if (elCs && (elCs.opacity === '0' || elCs.visibility === 'hidden' ||
+          (parseFloat(elCs.opacity) < 0.1 && elCs.position === 'fixed'))) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    }
+
+    /* Walk up to find link */
+    var link = el;
+    while (link && link !== document.body) {
+      if (link.tagName === 'A') {
+        var href = link.href || '';
         if (isAdUrl(href)) {
           e.preventDefault();
           e.stopPropagation();
           return false;
         }
+        /* Block external target="_blank" links injected by ads */
+        if (link.target === '_blank' && href.indexOf('http') === 0) {
+          try {
+            var linkHost = new URL(href).hostname;
+            var baseSelf = hostname.split('.').slice(-2).join('.');
+            var baseLink = linkHost.split('.').slice(-2).join('.');
+            if (baseSelf !== baseLink && isAdUrl(href)) {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }
+          } catch (ex) {}
+        }
         break;
       }
-      el = el.parentElement;
+      link = link.parentElement;
     }
+
+    _clickOpenAllowed = true;
+    _setTimeout(function () { _clickOpenAllowed = false; }, 100);
   }, true);
 
-  /* 5. Popunder/tab-under blocker:
-     Some ads open the ad in the CURRENT tab and your page in a new tab.
-     Detect by monitoring focus/blur + window.open patterns. */
-  var lastUserClick = 0;
-  document.addEventListener('mousedown', function () { lastUserClick = _Date_now(); }, true);
-  document.addEventListener('touchstart', function () { lastUserClick = _Date_now(); }, true);
+  /* Block "click anywhere on page" popunder:
+     Some sites add a click handler on document/body that opens ads. */
+  document.addEventListener('mousedown', function (e) {
+    /* If the click is on a plain area (not a real interactive element) and
+       would trigger a popunder, block it */
+    var tag = e.target.tagName;
+    if (tag !== 'A' && tag !== 'BUTTON' && tag !== 'INPUT' && tag !== 'SELECT') {
+      var parentLink = e.target.closest && e.target.closest('a');
+      if (!parentLink) {
+        _clickOpenAllowed = false;
+      }
+    }
+  }, true);
 
   proxyFn(window, 'focus', function (target, thisArg, args) {
     return _Reflect.apply(target, thisArg, args);
