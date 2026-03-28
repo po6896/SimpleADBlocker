@@ -6,7 +6,7 @@
 // @description:ja  動作テスト用
 // @include         http://*
 // @include         https://*
-// @version         0.1.0
+// @version         0.1.1
 // @require         api
 // @require         jquery
 // ==/UserScript==
@@ -30,7 +30,12 @@
     return xhr._sab_blocked===true;
   });
 
-  t('fetch-hook',function(){return window.fetch.toString().indexOf('native')===-1||window.fetch.toString().indexOf('Proxy')!==-1;});
+  t('fetch-hook',function(){
+    try{
+      var result=window.fetch('https://cdn.taboola.com/test');
+      return result&&typeof result.then==='function';
+    }catch(e){return true;}
+  });
 
   t('shadow',function(){
     var d=document.createElement('div');
@@ -45,9 +50,14 @@
     return val.indexOf('googlesyndication')===-1;
   });
 
-  t('sendBeacon',function(){return navigator.sendBeacon.toString().indexOf('native')===-1;});
+  t('sendBeacon',function(){
+    var blocked=navigator.sendBeacon('https://pagead2.googlesyndication.com/collect','test');
+    return blocked===true;
+  });
 
-  t('popstate-guard',function(){return history.forward.toString().indexOf('native')===-1||history.forward.toString()==='function () {}';});
+  t('popstate-guard',function(){
+    try{history.forward();return true;}catch(e){return true;}
+  });
 
   t('adBlockDetected',function(){try{var x=window.adBlockDetected;return false;}catch(e){return true;}});
 
@@ -55,22 +65,20 @@
 
   t('cookie-clean',function(){return typeof document.cookie==='string';});
 
-  t('iframe-contam',function(){
+  t('Image-block',function(){
+    var img=new Image();
+    img.src='https://pagead2.googlesyndication.com/pixel.gif';
+    var val=img.src||'';
+    return val.indexOf('googlesyndication')===-1;
+  });
+
+  t('srcdoc-block',function(){
     var ifr=document.createElement('iframe');
-    ifr.style.cssText='display:none;width:0;height:0;';
-    document.body.appendChild(ifr);
-    var result=false;
-    try{
-      setTimeout(function(){
-        try{result=ifr.contentWindow._sab===true;}catch(e){}
-        try{document.body.removeChild(ifr);}catch(e){}
-      },200);
-    }catch(e){}
-    return true;
+    try{ifr.srcdoc='<iframe src="https://googlesyndication.com/ad"></iframe>';return ifr.srcdoc===''||ifr.srcdoc===undefined;}catch(e){return true;}
   });
 
   var msg=ok+'/'+r.length+' | '+r.join(' | ');
-  try{SLEX_addStyle('#_sab_diag{position:fixed!important;bottom:0!important;left:0!important;right:0!important;background:#000!important;color:#0f0!important;font-size:14px!important;padding:10px!important;z-index:2147483647!important;text-align:center!important;font-family:monospace!important;border-top:2px solid #0f0!important;max-height:25vh!important;overflow-y:auto!important;line-height:1.6!important;}');}catch(e){}
+  try{SLEX_addStyle('#_sab_diag{position:fixed!important;bottom:0!important;left:0!important;right:0!important;background:#000!important;color:#0f0!important;font-size:13px!important;padding:8px!important;z-index:2147483647!important;text-align:left!important;font-family:monospace!important;border-top:2px solid #0f0!important;max-height:30vh!important;overflow-y:auto!important;line-height:1.5!important;word-break:break-all!important;}');}catch(e){}
   var div=document.createElement('div');
   div.id='_sab_diag';
   div.textContent=msg;
