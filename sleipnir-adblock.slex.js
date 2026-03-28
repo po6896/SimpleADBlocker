@@ -8,18 +8,13 @@
 // @include     https://*
 // @exclude     about:*
 // @exclude     chrome://*
-// @version     4.0.0
+// @version     4.1.0
 // @require     jquery
 // @require     api
 // ==/UserScript==
 
 (function () {
   'use strict';
-
-  // ============================================================
-  // CORE: Save native references before page scripts can tamper
-  // (uBlock Origin "safeSelf" pattern)
-  // ============================================================
 
   var _Object = Object;
   var _defineProperty = Object.defineProperty;
@@ -47,11 +42,6 @@
     }
     return hostname.indexOf('.' + pattern) === hostname.length - pattern.length - 1;
   }
-
-  // ============================================================
-  // LAYER 0: Proxy-Apply with toString preservation
-  // (uBlock Origin core pattern — makes hooks undetectable)
-  // ============================================================
 
   var proxiedFns = new _WeakMap();
 
@@ -82,10 +72,6 @@
     proxiedFns.set(proxy, fn);
     owner[name] = proxy;
   }
-
-  // ============================================================
-  // LAYER 1: Network Interception
-  // ============================================================
 
   var AD_DOMAINS = [
     'googlesyndication.com', 'doubleclick.net', 'googleadservices.com',
@@ -138,7 +124,6 @@
     return false;
   }
 
-  // --- XHR Interception (with readyState simulation) ---
   proxyFn(XMLHttpRequest.prototype, 'open', function (target, thisArg, args) {
     if (isAdUrl(args[1])) {
       thisArg._sab_blocked = true;
@@ -166,7 +151,6 @@
     return _Reflect.apply(target, thisArg, args);
   });
 
-  // --- Fetch Interception ---
   if (window.fetch && _Response) {
     proxyFn(window, 'fetch', function (target, thisArg, args) {
       var url = (typeof args[0] === 'string') ? args[0] : (args[0] && args[0].url) || '';
@@ -177,7 +161,6 @@
     });
   }
 
-  // --- createElement Interception (Proxy-based for toString stealth) ---
   var origCreateElement = document.createElement;
   var boundCreateElement = origCreateElement.bind(document);
   document.createElement = new _Proxy(origCreateElement, {
@@ -205,11 +188,9 @@
   });
   proxiedFns.set(document.createElement, origCreateElement);
 
-  // --- window.open with decoy (uBO pattern) ---
   proxyFn(window, 'open', function (target, thisArg, args) {
     var url = args[0];
     if (isAdUrl(url)) {
-      // Return decoy proxy so scripts don't detect the block
       return new _Proxy(window, {
         get: function (t, prop) {
           if (prop === 'closed') return false;
@@ -224,7 +205,6 @@
     return _Reflect.apply(target, thisArg, args);
   });
 
-  // --- document.write filter ---
   var _adScriptRe = /googlesyndication|doubleclick|adsbygoogle|taboola|outbrain|nend\.net|i-mobile|microad|geniee|bance|gliacloud|i2ad\.jp/;
   proxyFn(document, 'write', function (target, thisArg, args) {
     if (args[0] && _adScriptRe.test(args[0])) return;
@@ -235,18 +215,12 @@
     return _Reflect.apply(target, thisArg, args);
   });
 
-  // --- eval filter (uBO noeval-if) ---
   proxyFn(window, 'eval', function (target, thisArg, args) {
     var code = String(args[0]);
     if (_adScriptRe.test(code)) return;
     return _Reflect.apply(target, thisArg, args);
   });
 
-  // ============================================================
-  // LAYER 2: Anti-Adblock Scriptlets (uBO patterns)
-  // ============================================================
-
-  // abort-on-property-read: trap common adblock detection variables
   function abortOnRead(chain) {
     var token = String(Math.random()).slice(2);
     var abort = function () { throw new ReferenceError(token); };
@@ -278,7 +252,6 @@
     _defineProperty(owner, parts[parts.length - 1], { get: abort, set: function () {}, configurable: true });
   }
 
-  // set-constant: make ad config return harmless values
   function setConstant(chain, value) {
     var parts = chain.split('.');
     var owner = window;
@@ -294,7 +267,6 @@
     });
   }
 
-  // Common anti-adblock traps
   try { abortOnRead('adBlockDetected'); } catch (e) {}
   try { abortOnRead('google_ad_status'); } catch (e) {}
   try { abortOnRead('__ads'); } catch (e) {}
@@ -307,7 +279,6 @@
   try { setConstant('adblock', false); } catch (e) {}
   try { setConstant('isAdsBlocked', false); } catch (e) {}
 
-  // --- JSON.parse pruning (remove ad data from API responses) ---
   proxyFn(JSON, 'parse', function (target, thisArg, args) {
     var obj = _Reflect.apply(target, thisArg, args);
     if (obj && typeof obj === 'object') {
@@ -322,7 +293,6 @@
     return obj;
   });
 
-  // --- Spoof CSS + getBoundingClientRect (uBO spoof-css) ---
   var baitClasses = /\b(adsbox|ad-placement|ad-banner|textads|banner-ads|adsbygoogle|pub_300x250)\b/;
 
   proxyFn(window, 'getComputedStyle', function (target, thisArg, args) {
@@ -359,7 +329,6 @@
     return rect;
   });
 
-  // --- Overlay buster (uBO pattern) ---
   function bustOverlay() {
     var vw = Math.min(document.documentElement.clientWidth, window.innerWidth);
     var vh = Math.min(document.documentElement.clientHeight, window.innerHeight);
@@ -385,7 +354,6 @@
     return removed;
   }
 
-  // --- Tracking cookie removal ---
   function removeTrackingCookies() {
     var trackingPatterns = /^(_ga|_gid|_gat|__utm|_fbp|_fbc|fr|datr|sb|IDE|DSID|MUID|_uetsid|ANONCHK|NID|1P_JAR|__gads)/;
     var cookies = document.cookie.split(';');
@@ -401,12 +369,7 @@
     }
   }
 
-  // ============================================================
-  // LAYER 3: CSS Cosmetic Hiding
-  // ============================================================
-
   var CSS_RULES = [
-    // Google AdSense / DFP
     'ins.adsbygoogle', '.adsbygoogle',
     '[id^="google_ads_"]', '[id^="google_ads_iframe"]',
     '[name^="google_ads_iframe"]',
@@ -416,33 +379,27 @@
     'ins[id^="gpt_unit_/"]', '[id^="gpt_ad_"]', '[id^="google_dfp_"]',
     'div[id^="dfp-ad-"]', '[data-id^="div-gpt-ad"]', 'gpt-ad',
 
-    // AMP
     'amp-ad', 'amp-ad-custom', 'amp-embed[type="taboola"]',
     'amp-fx-flying-carpet', 'amp-connatix-player',
 
-    // Custom elements
     'ad-slot', 'AD-SLOT', 'ad-shield-ads',
     'display-ad-component', 'display-ads',
     'atf-ad-slot', 'broadstreet-zone-container',
 
-    // Taboola
     '.taboola', '.taboola-widget', '.taboola-container',
     '.taboola_container', '.taboola-ad', '.taboolaads',
     '.taboola-wrapper', '.taboola-placeholder', '.taboola-block', '.tbl-feed',
     'div[id^="taboola-"]', '[data-taboola-options]', '[data-testid^="taboola-"]',
 
-    // Outbrain
     '.outbrain', '.Outbrain', '.OUTBRAIN',
     '.outbrain-widget', '.outbrainWidget', '.outbrain-wrapper', '.ob-widget',
     'div[data-widget-id^="outbrain"]',
 
-    // Zergnet / Criteo / popIn / MGID
     '.zergnet', '.ZERGNET', '.zergnet-widget', 'div[id^="zergnet-widget"]',
     'div[id^="crt-"]',
     '._popIn_recommend_article_ad', '._popIn_recommend_ad_section_articles',
     '.mgid_3x2', '.mgid-wrapper',
 
-    // Generic IDs
     '#ad', '#ads', '#AD',
     '#ad-area', '#ad-banner', '#ad-box', '#ad-container',
     '#ad-frame', '#ad-header', '#ad-footer', '#ad-slot',
@@ -472,7 +429,6 @@
     '#PR-area', '#pr_area', '#prBox',
     '#googleAD', '#topAD', '#footerAD', '#upliftsquare',
 
-    // Generic classes
     '.ads', '.Ads', '.ADS',
     '.ad-area', '.ad-banner', '.ad-block', '.ad-body', '.ad-box',
     '.ad-container', '.ad-footer', '.ad-frame', '.ad-header',
@@ -487,7 +443,6 @@
     '.native-ad', '.native_ad', '.native_ads', '.nativead', '.nativeAd',
     '.native-ad-container', '.native-ad-item',
 
-    // Sticky / Overlay
     '.adhesion:not(body)', '.adhesion-block', '.adhesive_holder',
     '.adhesiveAdWrapper', '.anchor-ad', '.anchorAd',
     '.bottom_sticky_ad', '.fixed_ad', '.fixed_adslot',
@@ -506,7 +461,6 @@
     '.floating-ad', '.fixed-banner',
     '.Sticky-AdContainer', '.StickyAdRail__Inner',
 
-    // Sponsored
     '.sponsor_ad', '.sponsorad', '.sponsorAd', '.sponsorads',
     '.sponsor-ads', '.sponsored_ad', '.sponsored_ads',
     '.sponsored_link', '.sponsored_links', '.sponsored_post',
@@ -519,16 +473,13 @@
     '.content-ad-container', '.content-ads', '.contentAds',
     '.revcontent-wrap', '.sponsored', '.sponsor_link',
 
-    // Banner (ad-specific)
     '.ad-rectangle-banner', '.ad-banner-top', '.ad-banner-bottom',
     '.bnrBb', '.bnSuper',
     'div[class*="ad"] .banner', 'aside .banner',
 
-    // Sizes
     '.pub_300x250', '.pub_300x250m', '.pub_728x90',
     '.ads300x250', '.ad_300x250', '.ad_320x100',
 
-    // Data attributes
     '[data-ad-cls]', '[data-ad-manager-id]', '[data-ad-module]',
     '[data-ad-name]', '[data-ad-width]', '[data-asg-ins]',
     '[data-block-type="ad"]', '[data-dynamic-ads]',
@@ -544,7 +495,6 @@
     '[data-component="ad"]', '[data-nend]', '[data-imad]',
     '[class^="adDisplay-module"]', '[class^="amp-ad-"]',
 
-    // Structural
     'div[aria-label="Ads"]', 'div[aria-label="広告"]',
     'div[class$="-adlabel"]',
     'div[id*="MarketGid"]', 'div[id*="ScriptRoot"]',
@@ -557,7 +507,6 @@
     'aside[id^="adrotate_widgets-"]',
     'span[data-ez-ph-id]', 'span[id^="ezoic-pub-ad-placeholder-"]',
 
-    // JP ad networks
     '.nend_wrapper', '[id^="nend_adspace"]',
     '[id^="imobile_"]', '.i-mobile-ad', 'div[id^="im-"]',
     '[id^="microad"]', '.microad-ad', '[id^="microadcompass-"]',
@@ -566,38 +515,29 @@
     'citrus-ad-wrapper', 'ps-connatix-module',
     'hl-adsense', 'a-ad', 'zeus-ad', 'div[ow-ad-unit-wrapper]',
 
-    // Size-based iframes
     'iframe[width="300"][height="250"]', 'iframe[width="728"][height="90"]',
     'iframe[width="320"][height="50"]', 'iframe[width="320"][height="100"]',
 
-    // Anti-adblock overlays
     '#adBlockOverlay', '.adblock-popup', '#disable-ads-container', '._ap_adrecover_ad',
 
-    // AdSense variants
     '.adsbygoogle2', '.adsbygoogle-box', '.adsbygoogle-noablate', '.adsbygoogle-wrapper',
     '.adSense', '.Adsense', '.AdSense',
     '.adsense_ad', '.adsense_block', '.adsense_container',
     '.adsense_wrapper', '.adsense-ads', '.adsenseAds',
     '.adsense_mpu', '.adsense_rectangle',
 
-    // Ad Inserter plugin (WordPress)
     '.ai_widget', '.ai-sticky-widget',
     'div[data-ai]', 'span[data-ai-block]',
     'div[class*="code-block"]',
 
-    // Bance SSP
     'div[id^="bnc_ad_"]',
 
-    // GliaCloud video ads
     '.gliaplayer-container',
 
-    // Floating side banners
     '.spot', '.spot--left', '.spot--right', '.spot--top', '.spot--bottom',
 
-    // sidebar-fix-ad
     '.sidebar-fix-ad',
 
-    // href-based
     'a[href^="https://paid.outbrain.com/network/redir?"]',
     'a[href^="https://ad.doubleclick.net/"]',
     'a[href^="https://adclick.g.doubleclick.net/"]',
@@ -613,7 +553,6 @@
     'a[onmousedown*="paid.outbrain.com"]',
     'img[src^="https://s-img.adskeeper.com/"]',
 
-    // Tracking pixels (safe: require tracking src + tiny size)
     'img[src*="googlesyndication.com"][width="1"]',
     'img[src*="doubleclick.net"][width="1"]',
     'img[src*="facebook.com/tr"][width="1"]',
@@ -622,10 +561,6 @@
     'img[src*="beacon"][width="1"][height="1"]',
     'img[src*="pixel."][width="1"][height="1"]'
   ].join(',');
-
-  // ============================================================
-  // LAYER 3b: Site-Specific CSS (domain-gated)
-  // ============================================================
 
   var SITE_RULES = {
     'hero-news.com': [
@@ -720,10 +655,6 @@
     'a[href*="amazon-adsystem.com"]', 'a[href*="click.ad-stir.com"]'
   ].join(',');
 
-  // ============================================================
-  // LAYER 3c: Inject CSS
-  // ============================================================
-
   var hideDecl = ' { display: none !important; }';
 
   SLEX_addStyle(CSS_RULES + hideDecl);
@@ -745,17 +676,12 @@
     'div[style*="width:320px"][style*="height:100px"]'
   ].join(',') + hideDecl);
 
-  // Decoy protection
   SLEX_addStyle(
     'div.adsbox[style*="left:-9999px"],' +
     'div.ad-placement[style*="left:-9999px"],' +
     'div.adsbygoogle[style*="left:-9999px"]' +
     ' { display: block !important; height: 1px !important; }'
   );
-
-  // ============================================================
-  // LAYER 4: DOM Cleanup + PR Label Removal
-  // ============================================================
 
   var REMOVE_SELECTORS = [
     'iframe[src*="googlesyndication.com"]', 'iframe[src*="doubleclick.net"]',
@@ -789,10 +715,6 @@
     });
   }
 
-  // ============================================================
-  // LAYER 5: Anti-Adblock Decoys
-  // ============================================================
-
   var decoyCreated = false;
   function createDecoys() {
     if (decoyCreated || !document.body) return;
@@ -806,10 +728,6 @@
       document.body.appendChild(d);
     }
   }
-
-  // ============================================================
-  // LAYER 6: MutationObserver (smart node inspection)
-  // ============================================================
 
   var debounceTimer = null;
 
@@ -849,10 +767,6 @@
     }
   }
 
-  // ============================================================
-  // LAYER 7: External Filter List
-  // ============================================================
-
   var CACHE_KEY = '_sab_f';
   var CACHE_TS_KEY = '_sab_t';
   var CACHE_TTL = 6 * 60 * 60 * 1000;
@@ -878,7 +792,6 @@
           if (l.indexOf('#@#') !== -1) continue;
           var sepIdx = l.indexOf('##');
           if (sepIdx === -1) continue;
-          // Global rule (##selector) or domain-matched rule (domain##selector)
           var domainPart = l.substring(0, sepIdx);
           if (domainPart && domainPart.indexOf(hostname) === -1) continue;
           var s = l.substring(sepIdx + 2).trim();
@@ -897,10 +810,6 @@
       }
     } catch (e) {}
   }
-
-  // ============================================================
-  // Execute
-  // ============================================================
 
   removeAdIframes();
   createDecoys();
