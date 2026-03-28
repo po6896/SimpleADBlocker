@@ -8,7 +8,7 @@
 // @include     https://*
 // @exclude     about:*
 // @exclude     chrome://*
-// @version     4.4.0
+// @version     4.5.0
 // @require     jquery
 // @require     api
 // ==/UserScript==
@@ -936,17 +936,27 @@
      LAYER 9: Anti-Annoyance (dirty ad tricks countermeasures)
      ========================================================= */
 
-  /* 1. History spam blocker:
-     Ads push fake entries to history so back button loops on the ad page.
-     We override pushState/replaceState to block ad-domain redirects,
-     and fix the popstate event to skip ad entries. */
+  /* 1. Back-button trap killer (comprehensive):
+     Pattern A: pushState spam — ads push fake history entries
+     Pattern B: popstate hijack — ads listen for back and redirect you forward
+     Pattern C: hashchange loop — ads change hash to create fake history
+     Pattern D: history.go/back override — ads call history.go(1) on popstate */
+
   var realPushState = history.pushState;
   var realReplaceState = history.replaceState;
+  var pushCount = 0;
+  var MAX_PUSH_PER_SEC = 3;
+  var pushResetTimer = null;
 
   history.pushState = new _Proxy(realPushState, {
     apply: function (target, thisArg, args) {
       var url = args[2];
       if (url && isAdUrl(String(url))) return;
+      pushCount++;
+      if (pushCount > MAX_PUSH_PER_SEC) return;
+      if (!pushResetTimer) {
+        pushResetTimer = _setTimeout(function () { pushCount = 0; pushResetTimer = null; }, 1000);
+      }
       return _Reflect.apply(target, thisArg, args);
     }
   });
@@ -961,8 +971,45 @@
   });
   proxiedFns.set(history.replaceState, realReplaceState);
 
-  /* 2. beforeunload / unload dialog blocker:
-     Some ads show "Are you sure you want to leave?" to trap users. */
+  /* Block popstate hijacking:
+     Sites add popstate listener that does history.go(1) or location.replace
+     to prevent the user from going back. We neuter these. */
+  var origAddEventListener = EventTarget.prototype.addEventListener;
+  EventTarget.prototype.addEventListener = new _Proxy(origAddEventListener, {
+    apply: function (target, thisArg, args) {
+      var type = args[0];
+      var handler = args[1];
+      if (type === 'popstate' && thisArg === window && handler) {
+        var handlerStr = '';
+        try { handlerStr = typeof handler === 'function' ? handler.toString() : ''; } catch (e) {}
+        if (/history\.(go|forward|pushState)|location\.(href|replace|assign)|window\.location/i.test(handlerStr)) {
+          return;
+        }
+      }
+      return _Reflect.apply(target, thisArg, args);
+    }
+  });
+  proxiedFns.set(EventTarget.prototype.addEventListener, origAddEventListener);
+
+  /* Block history.forward() and history.go(1) called by ads */
+  try {
+    var origHistoryGo = history.go;
+    history.go = new _Proxy(origHistoryGo, {
+      apply: function (target, thisArg, args) {
+        if (args[0] > 0) return;
+        return _Reflect.apply(target, thisArg, args);
+      }
+    });
+    proxiedFns.set(history.go, origHistoryGo);
+  } catch (e) {}
+
+  try {
+    var origHistoryForward = history.forward;
+    history.forward = function () {};
+    proxiedFns.set(history.forward, origHistoryForward);
+  } catch (e) {}
+
+  /* 2. beforeunload / unload dialog blocker */
   window.addEventListener('beforeunload', function (e) {
     e.stopImmediatePropagation();
   }, true);
@@ -1057,6 +1104,103 @@
   SLEX_addStyle('html, body { overflow: visible !important; scroll-behavior: auto !important; }');
   SLEX_addStyle('html.no-scroll, body.no-scroll, html.modal-open, body.modal-open, html.overflow-hidden, body.overflow-hidden { overflow: visible !important; }');
 
+  /* =========================================================
+     LAYER 10: Antenna site auto-redirect bypass
+     Skips intermediate redirect/ad pages on Japanese antenna sites.
+     Extracts the real destination URL and navigates directly.
+     ========================================================= */
+
+  var ANTENNA_PATTERNS = [
+    { host: /antena|antenna|matome|2ch\.sc|5ch\.net.*jump|antine/, param: 'url' },
+    { host: /antena|antenna/, param: 'u' },
+    { host: /antena|antenna/, param: 'link' },
+    { host: /antena|antenna/, param: 'href' },
+    { host: /antena|antenna/, param: 'redirect' },
+    { host: /antena|antenna/, param: 'to' },
+    { host: /antena|antenna/, param: 'out' },
+    { host: /logp\.jp/, param: 'u' },
+    { host: /rank\.i2i\.jp/, param: 'url' },
+    { host: /cgi\.aya\.or\.jp/, param: 'url' }
+  ];
+
+  function tryAntennaRedirect() {
+    var href = location.href;
+    var hn = hostname;
+
+    for (var i = 0; i < ANTENNA_PATTERNS.length; i++) {
+      var pat = ANTENNA_PATTERNS[i];
+      if (!pat.host.test(hn)) continue;
+      try {
+        var u = new URL(href);
+        var dest = u.searchParams.get(pat.param);
+        if (dest && dest.indexOf('http') === 0) {
+          location.replace(dest);
+          return true;
+        }
+      } catch (e) {}
+    }
+
+    /* Generic: if URL has ?url=http... or ?redirect=http... on any antenna-like site */
+    if (/antena|antenna|redir|jump|click|track|gate|link/i.test(hn)) {
+      try {
+        var u2 = new URL(href);
+        var possibleParams = ['url', 'u', 'link', 'href', 'redirect', 'to', 'out', 'target', 'dest', 'go'];
+        for (var j = 0; j < possibleParams.length; j++) {
+          var val = u2.searchParams.get(possibleParams[j]);
+          if (val && val.indexOf('http') === 0) {
+            try {
+              var destUrl = new URL(val);
+              if (destUrl.hostname !== hostname) {
+                location.replace(val);
+                return true;
+              }
+            } catch (e) {}
+          }
+        }
+      } catch (e) {}
+    }
+
+    /* Meta refresh redirect detection */
+    var metas = document.querySelectorAll('meta[http-equiv="refresh"]');
+    for (var k = 0; k < metas.length; k++) {
+      var content = metas[k].getAttribute('content') || '';
+      var match = content.match(/url\s*=\s*['"]?(https?:\/\/[^'">\s]+)/i);
+      if (match && match[1]) {
+        try {
+          var mUrl = new URL(match[1]);
+          if (mUrl.hostname !== hostname && !isAdUrl(match[1])) {
+            location.replace(match[1]);
+            return true;
+          }
+        } catch (e) {}
+      }
+    }
+
+    return false;
+  }
+
+  /* Also intercept links TO antenna sites and rewrite them */
+  function rewriteAntennaLinks() {
+    var allLinks = document.querySelectorAll('a[href*="antena"], a[href*="antenna"], a[href*="redirect"], a[href*="jump."]');
+    for (var i = 0; i < allLinks.length; i++) {
+      var a = allLinks[i];
+      var href = a.href || '';
+      try {
+        var u = new URL(href);
+        var possibleParams = ['url', 'u', 'link', 'href', 'redirect', 'to', 'out'];
+        for (var j = 0; j < possibleParams.length; j++) {
+          var val = u.searchParams.get(possibleParams[j]);
+          if (val && val.indexOf('http') === 0) {
+            a.href = val;
+            a.removeAttribute('onmousedown');
+            a.removeAttribute('onclick');
+            break;
+          }
+        }
+      } catch (e) {}
+    }
+  }
+
   var CACHE_KEY = '_sab_f';
   var CACHE_TS_KEY = '_sab_t';
   var CACHE_TTL = 6 * 60 * 60 * 1000;
@@ -1101,6 +1245,7 @@
     } catch (e) {}
   }
 
+  if (tryAntennaRedirect()) return;
   removeAdIframes();
   createDecoys();
   removeTrackingCookies();
@@ -1111,6 +1256,7 @@
     bustOverlay();
     createDecoys();
     heuristicScan();
+    rewriteAntennaLinks();
   }, 1500);
 
   _setTimeout(function () {
@@ -1118,6 +1264,7 @@
     cleanPRLabels();
     removeTrackingCookies();
     heuristicScan();
+    rewriteAntennaLinks();
   }, 5000);
 
   _setTimeout(heuristicScan, 8000);
