@@ -8,7 +8,7 @@
 // @description:ja  広告ネットワーク、トラッカー、ポップアップをブロックします。
 // @include         http://*
 // @include         https://*
-// @version         5.3.0
+// @version         5.3.1
 // @history         4.8.1 Initial gallery release.
 // @history:ja      4.8.1 ギャラリー初回リリース。
 // @require         api
@@ -145,8 +145,18 @@
   function isAdUrl(url) {
     if (!url) return false;
     var lower = url.toLowerCase();
+    /* Extract hostname from URL for domain matching */
+    var hostname = '';
+    try {
+      var m = lower.match(/^https?:\/\/([^\/\?#]+)/);
+      if (m) hostname = m[1];
+    } catch (e) {}
     for (var i = 0; i < AD_DOMAINS.length; i++) {
-      if (lower.indexOf(AD_DOMAINS[i]) !== -1) return true;
+      var d = AD_DOMAINS[i];
+      /* Match domain against hostname (exact or subdomain) */
+      if (hostname && (hostname === d || hostname.indexOf('.' + d) !== -1 || hostname.indexOf('//' + d) !== -1)) return true;
+      /* Fallback: path-based ad patterns (query params, paths) */
+      if (!hostname && lower.indexOf(d) !== -1) return true;
     }
     return false;
   }
@@ -1369,7 +1379,7 @@
       var z2 = parseInt(cs2.zIndex, 10);
       if (isNaN(z2) || z2 < 9000) continue;
       /* Must also have ad-like content (iframes, ad classes, external links) */
-      var hasAdSignal = el2.querySelector('iframe, ins.adsbygoogle, [class*="ad-"], [id*="ad-"], a[target="_blank"][href]');
+      var hasAdSignal = el2.querySelector('iframe, ins.adsbygoogle, [class^="ad-"], [class~="ad"], [id^="ad-"], [id^="ad_"]');
       if (!hasAdSignal) continue;
       var hasClose = el2.querySelector('[class*="close"], [class*="dismiss"], [aria-label*="close"], [aria-label*="Close"], [onclick*="close"], [onclick*="display"], [onclick*="none"]');
       if (!hasClose) {
@@ -1396,10 +1406,14 @@
     }
 
     /* 6. Floating circular/small ad widgets (like ddd-smart.net mascot overlay) */
+    var CHAT_WIDGET_IDS = /^(crisp|zendesk|intercom|tawk|hubspot|drift|livechat|olark|freshchat|tidio|chatwoot)/i;
     var smallFixedEls = document.querySelectorAll('div, img, a');
     for (var i = 0; i < smallFixedEls.length; i++) {
       var sf = smallFixedEls[i];
       if (isSafeElement(sf)) continue;
+      /* Skip known chat/support widgets */
+      if (sf.id && CHAT_WIDGET_IDS.test(sf.id)) continue;
+      if (sf.className && typeof sf.className === 'string' && CHAT_WIDGET_IDS.test(sf.className)) continue;
       var sfCs;
       try { sfCs = _origGetComputedStyle.call(window, sf); } catch (e) { continue; }
       if (sfCs.position !== 'fixed') continue;
@@ -1407,9 +1421,13 @@
       if (isNaN(sfZ) || sfZ < 9999) continue;
       var sfRect = sf.getBoundingClientRect();
       if (sfRect.width < 200 && sfRect.height < 200 && sfRect.width > 30) {
-        var sfHasLink = sf.tagName === 'A' || sf.querySelector('a[target="_blank"], a[href*="click"], a[href*="track"]');
-        var sfHasImg = sf.querySelector('img') || sf.tagName === 'IMG';
-        if (sfHasLink || sfHasImg) {
+        /* Require ad URL in links, not just any link/image */
+        var sfLinks = sf.tagName === 'A' ? [sf] : (sf.querySelectorAll ? Array.prototype.slice.call(sf.querySelectorAll('a')) : []);
+        var sfIsAd = false;
+        for (var sfl = 0; sfl < sfLinks.length; sfl++) {
+          if (sfLinks[sfl].href && isAdUrl(sfLinks[sfl].href)) { sfIsAd = true; break; }
+        }
+        if (sfIsAd) {
           nukeElement(sf);
         }
       }
@@ -1437,7 +1455,7 @@
     }
 
     /* 8. Empty ad placeholder divs (height but no visible content) */
-    var divs = document.querySelectorAll('div[id*="ad"], div[class*="ad-"], div[class*="_ad"]');
+    var divs = document.querySelectorAll('div[id^="ad-"], div[id^="ad_"], div[id*="-ad-"], div[id*="_ad_"], div[class^="ad-"], div[class*=" ad-"], div[class*="_ad_"]');
     for (var i = 0; i < divs.length; i++) {
       var d = divs[i];
       if (d.style.display === 'none') continue;
@@ -1506,6 +1524,7 @@
       if (!pushResetTimer) {
         pushResetTimer = _setTimeout(function () { pushCount = 0; pushResetTimer = null; }, 1000);
       }
+      _adWasNuked = false; /* Reset on SPA navigation */
       return _Reflect.apply(target, thisArg, args);
     }
   });
@@ -1577,8 +1596,8 @@
     proxiedFns.set(location.assign, _origAssign);
   } catch (e) {}
 
+  var _origReplace = location.replace;
   try {
-    var _origReplace = location.replace;
     location.replace = new _Proxy(_origReplace, {
       apply: function (target, thisArg, args) {
         if (isAdUrl(String(args[0]))) return;
@@ -1670,7 +1689,7 @@
   if (window.Notification && Notification.requestPermission) {
     var origNotifPerm = Notification.requestPermission;
     Notification.requestPermission = function () {
-      if (_Date_now() - lastUserClick > 3000) {
+      if (_Date_now() - _lastUserInteraction > 3000) {
         return _Promise.resolve('denied');
       }
       return origNotifPerm.apply(this, arguments);
@@ -1682,7 +1701,7 @@
   if (navigator.clipboard && navigator.clipboard.writeText) {
     var origClipWrite = navigator.clipboard.writeText;
     navigator.clipboard.writeText = function (text) {
-      if (_Date_now() - lastUserClick > 1000) {
+      if (_Date_now() - _lastUserInteraction > 1000) {
         return _Promise.resolve();
       }
       return origClipWrite.call(navigator.clipboard, text);
@@ -1776,7 +1795,7 @@
         var u = new URL(href);
         var dest = u.searchParams.get(pat.param);
         if (dest && dest.indexOf('http') === 0) {
-          location.replace(dest);
+          _origReplace.call(location, dest);
           return true;
         }
       } catch (e) {}
@@ -1793,7 +1812,7 @@
             try {
               var destUrl = new URL(val);
               if (destUrl.hostname !== hostname) {
-                location.replace(val);
+                _origReplace.call(location, val);
                 return true;
               }
             } catch (e) {}
