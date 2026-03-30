@@ -8,7 +8,7 @@
 // @description:ja  広告ネットワーク、トラッカー、ポップアップをブロックします。
 // @include         http://*
 // @include         https://*
-// @version         5.2.0
+// @version         5.3.0
 // @history         4.8.1 Initial gallery release.
 // @history:ja      4.8.1 ギャラリー初回リリース。
 // @require         api
@@ -1246,10 +1246,14 @@
     if (SAFE_TAGS[el.tagName]) return true;
     if (el.id === '_sab_diag') return true;
     if (el.getAttribute && el.getAttribute('contenteditable')) return true;
+    /* Protect ARIA-roled elements (dialogs, menus, navigation) */
+    var role = el.getAttribute && el.getAttribute('role');
+    if (role && /^(dialog|alertdialog|menu|menubar|navigation|tablist|toolbar|search|banner|complementary|contentinfo)$/.test(role)) return true;
     return false;
   }
 
   function nukeElement(el) {
+    _adWasNuked = true;
     /* Record selector for self-healing detection */
     try {
       var sig = '';
@@ -1261,8 +1265,6 @@
     try {
       el.style.setProperty('display', 'none', 'important');
       el.style.setProperty('visibility', 'hidden', 'important');
-      el.style.setProperty('pointer-events', 'none', 'important');
-      el.style.setProperty('position', 'absolute', 'important');
       el.style.setProperty('width', '0', 'important');
       el.style.setProperty('height', '0', 'important');
       el.innerHTML = '';
@@ -1296,7 +1298,7 @@
     }
 
     /* 2. Fixed/sticky overlays with high z-index (popups, interstitials) */
-    var allEls = document.querySelectorAll('div, aside, section');
+    var allEls = document.querySelectorAll('div, aside');
     var vw = window.innerWidth || document.documentElement.clientWidth;
     var vh = window.innerHeight || document.documentElement.clientHeight;
     for (var i = 0; i < allEls.length; i++) {
@@ -1307,21 +1309,25 @@
       try { cs = _origGetComputedStyle.call(window, el); } catch (e) { continue; }
       if (cs.position !== 'fixed' && cs.position !== 'sticky') continue;
       var z = parseInt(cs.zIndex, 10);
-      if (isNaN(z) || z < 999) continue;
+      if (isNaN(z) || z < 9000) continue;
       var rect = el.getBoundingClientRect();
       /* Large overlay covering most of screen */
       if (rect.width > vw * 0.8 && rect.height > vh * 0.3) {
-        /* Check if it looks like an ad (has iframes, images, or links to external) */
-        var hasAdContent = el.querySelector('iframe, ins.adsbygoogle, [class*="ad"], a[target="_blank"]');
+        /* Must have strong ad signals - not just [class*="ad"] which matches "header", "loading", etc. */
+        var hasAdContent = el.querySelector('iframe, ins.adsbygoogle, [id*="google_ads"], [class*="adsbygoogle"]');
         var textLen = (el.textContent || '').trim().length;
-        if (hasAdContent || textLen < 50) {
+        if (hasAdContent || (textLen < 20 && el.querySelector('img, iframe'))) {
           nukeElement(el);
         }
       }
-      /* Bottom/top sticky banner */
+      /* Bottom/top sticky banner - require ad URL in links */
       if ((rect.top <= 5 || rect.bottom >= vh - 5) && rect.height < 120 && rect.width > vw * 0.5) {
-        var innerLinks = el.querySelectorAll('a[target="_blank"], a[href*="click"], a[href*="track"]');
-        if (innerLinks.length > 0) {
+        var bannerLinks = el.querySelectorAll('a[target="_blank"]');
+        var hasAdLink = false;
+        for (var bl = 0; bl < bannerLinks.length; bl++) {
+          if (bannerLinks[bl].href && isAdUrl(bannerLinks[bl].href)) { hasAdLink = true; break; }
+        }
+        if (hasAdLink) {
           nukeElement(el);
         }
       }
@@ -1350,7 +1356,7 @@
     }
 
     /* 4. Close-button overlay detection:
-       Floating elements with a close/× button are almost always ads. */
+       Only target elements with very high z-index AND ad-like content. */
     var fixedEls = document.querySelectorAll('div, span, aside');
     for (var i = 0; i < fixedEls.length; i++) {
       var el2 = fixedEls[i];
@@ -1361,7 +1367,10 @@
       try { cs2 = _origGetComputedStyle.call(window, el2); } catch (e) { continue; }
       if (cs2.position !== 'fixed' && cs2.position !== 'sticky') continue;
       var z2 = parseInt(cs2.zIndex, 10);
-      if (isNaN(z2) || z2 < 100) continue;
+      if (isNaN(z2) || z2 < 9000) continue;
+      /* Must also have ad-like content (iframes, ad classes, external links) */
+      var hasAdSignal = el2.querySelector('iframe, ins.adsbygoogle, [class*="ad-"], [id*="ad-"], a[target="_blank"][href]');
+      if (!hasAdSignal) continue;
       var hasClose = el2.querySelector('[class*="close"], [class*="dismiss"], [aria-label*="close"], [aria-label*="Close"], [onclick*="close"], [onclick*="display"], [onclick*="none"]');
       if (!hasClose) {
         var innerText = el2.textContent || '';
@@ -1372,21 +1381,16 @@
       }
     }
 
-    /* 5. "VIEW MORE" / "See More" floating ad buttons */
-    var allFixedLinks = document.querySelectorAll('a, div, span');
+    /* 5. Floating ad buttons: only target links to ad URLs with high z-index */
+    var allFixedLinks = document.querySelectorAll('a');
     for (var i = 0; i < allFixedLinks.length; i++) {
       var fl = allFixedLinks[i];
       var flCs;
       try { flCs = _origGetComputedStyle.call(window, fl); } catch (e) { continue; }
       if (flCs.position !== 'fixed') continue;
       var flZ = parseInt(flCs.zIndex, 10);
-      if (isNaN(flZ) || flZ < 100) continue;
-      var flText = (fl.textContent || '').trim().toLowerCase();
-      if (/^(view more|see more|もっと見る|詳しくはこちら|click here|tap here|download|install|play now|今すぐ|無料|ダウンロード|インストール|プレイ|始める|登録|entry|get|open)$/i.test(flText)) {
-        nukeElement(fl);
-        continue;
-      }
-      if (fl.tagName === 'A' && fl.href && isAdUrl(fl.href) && flZ >= 1000) {
+      if (isNaN(flZ) || flZ < 1000) continue;
+      if (fl.href && isAdUrl(fl.href)) {
         nukeElement(fl);
       }
     }
@@ -1419,7 +1423,7 @@
       try { odCs = _origGetComputedStyle.call(window, od); } catch (e) { continue; }
       if (odCs.position !== 'fixed') continue;
       var odZ = parseInt(odCs.zIndex, 10);
-      if (isNaN(odZ) || odZ < 999) continue;
+      if (isNaN(odZ) || odZ < 9000) continue;
       var odRect = od.getBoundingClientRect();
       if (odRect.width >= vw * 0.95 && odRect.height >= vh * 0.95) {
         var odBg = odCs.backgroundColor || '';
@@ -1690,7 +1694,7 @@
      pointer-events:none, position:fixed on body, or class-based locks.
      We fight back with CSS, JS property interception, and periodic cleanup. */
   SLEX_addStyle([
-    'html, body { overflow: visible !important; overflow-y: auto !important; scroll-behavior: auto !important; touch-action: auto !important; pointer-events: auto !important; position: static !important; width: auto !important; height: auto !important; }',
+    'html, body { scroll-behavior: auto !important; touch-action: auto !important; pointer-events: auto !important; }',
     'html.no-scroll, body.no-scroll, html.modal-open, body.modal-open, html.overflow-hidden, body.overflow-hidden, html.is-locked, body.is-locked, html.noscroll, body.noscroll, html.fixed, body.fixed { overflow: visible !important; overflow-y: auto !important; position: static !important; touch-action: auto !important; }',
     'html[style*="overflow: hidden"], body[style*="overflow: hidden"], html[style*="overflow:hidden"], body[style*="overflow:hidden"] { overflow: visible !important; overflow-y: auto !important; }',
     'html[style*="position: fixed"], body[style*="position: fixed"], html[style*="position:fixed"], body[style*="position:fixed"] { position: static !important; }',
@@ -1698,11 +1702,15 @@
     'html[style*="pointer-events: none"], body[style*="pointer-events: none"] { pointer-events: auto !important; }'
   ].join('\n'));
 
-  /* JS-level scroll lock cleanup: periodically force-remove inline locks */
+  /* JS-level scroll lock cleanup: only unlock when ad overlay is actually present */
+  var _adWasNuked = false;
   function forceUnlockScroll() {
     var html = document.documentElement;
     var body = document.body;
     if (!body) return;
+
+    /* Only force-unlock if we actually nuked an ad overlay on this page */
+    if (!_adWasNuked) return false;
 
     var locked = false;
     var targets = [html, body];
@@ -1712,10 +1720,6 @@
       if (t.style.overflow === 'hidden' || t.style.overflowY === 'hidden') {
         t.style.setProperty('overflow', 'visible', 'important');
         t.style.setProperty('overflow-y', 'auto', 'important');
-        locked = true;
-      }
-      if (t.style.position === 'fixed') {
-        t.style.setProperty('position', 'static', 'important');
         locked = true;
       }
       if (t.style.touchAction === 'none') {
@@ -1728,41 +1732,10 @@
       }
     }
 
-    /* Remove scroll-blocking classes */
-    var lockClasses = ['no-scroll', 'noscroll', 'modal-open', 'overflow-hidden', 'is-locked', 'fixed', 'scroll-lock', 'body-lock', 'no-overflow'];
-    for (var i = 0; i < targets.length; i++) {
-      if (!targets[i] || !targets[i].classList) continue;
-      for (var j = 0; j < lockClasses.length; j++) {
-        if (targets[i].classList.contains(lockClasses[j])) {
-          targets[i].classList.remove(lockClasses[j]);
-          locked = true;
-        }
-      }
-    }
-
     return locked;
   }
 
-  /* Intercept body/html style.overflow setter to prevent re-locking */
-  function guardOverflow(el) {
-    if (!el) return;
-    var origDescriptor = _getOwnPropertyDescriptor(el.style.__proto__ || CSSStyleDeclaration.prototype, 'overflow');
-    if (!origDescriptor || !origDescriptor.set) return;
-    var origSet = origDescriptor.set;
-    try {
-      _defineProperty(el.style, 'overflow', {
-        get: origDescriptor.get ? function () { return origDescriptor.get.call(this); } : undefined,
-        set: function (val) {
-          if (val === 'hidden') return;
-          origSet.call(this, val);
-        },
-        configurable: true
-      });
-    } catch (e) {}
-  }
-
-  try { guardOverflow(document.documentElement); } catch (e) {}
-  try { guardOverflow(document.body); } catch (e) {}
+  /* guardOverflow removed: intercepting overflow setter broke legitimate site modals/menus */
 
   /* Periodic scroll unlock (catches delayed locks from ad scripts) */
   _setTimeout(forceUnlockScroll, 500);
