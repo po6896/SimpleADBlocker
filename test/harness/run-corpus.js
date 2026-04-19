@@ -38,15 +38,22 @@ const VIEWPORT = { width: 412, height: 915 };
 
 /**
  * Known ad-server request URL substrings, JP-heavy.
- * Used to count DSP/SSP requests so we can tell "blocker worked" from
- * "no ad was even served (bot detected / page empty)".
+ * Two tiers:
+ *  - bid endpoints: SSP/DSP auction URLs (tier 1)
+ *  - creative CDN:  where the actual ad image/video is served from (tier 2)
+ * Both count as "ad requests" — from a user's perspective an unblocked creative
+ * CDN fetch is still an ad load.
  */
 const AD_SERVER_PATTERNS = [
+  /* tier 1: bid endpoints & tracking tags */
   /doubleclick\.net\//,
   /googlesyndication\.com\//,
   /googletagservices\.com\//,
+  /googletagmanager\.com\/gtag/,
   /pubads\.g\.doubleclick\.net/,
   /safeframe\.googlesyndication\.com/,
+  /pagead2\.googlesyndication\.com/,
+  /adservice\.google\.(com|co\.jp)/,
   /amazon-adsystem\.com\//,
   /criteo\.(com|net)\//,
   /ib\.adnxs\.com/,
@@ -54,17 +61,37 @@ const AD_SERVER_PATTERNS = [
   /openx\.net\//,
   /pubmatic\.com\//,
   /adform\.net\//,
+  /taboola\.com\//,
+  /outbrain\.com\//,
   /yjtag\.yahoo\.co\.jp/,
   /s\.yimg\.jp\/.*\/ad/,
+  /yads\.yahoo\.co\.jp/,
   /\/\/yie\.jp\//,
   /gssprt\.jp\//,
   /adingo\.jp\//,
   /fout\.jp\//,
-  /i-mobile\.co\.jp\/script/,
+  /i-mobile\.co\.jp\/(script|banner|ad)/,
   /zucks\.co\.jp\//,
   /amoad\.com\//,
   /nend\.net\//,
   /ad-stir\.com\//,
+  /microad\.jp\//,
+  /impact-ad\.jp\//,
+  /adsafeprotected\.com\//,
+  /moatads\.com\//,
+  /scorecardresearch\.com\//,
+
+  /* tier 2: creative CDN & image hosts */
+  /tpc\.googlesyndication\.com/,
+  /static\.criteo\.(com|net)/,
+  /images\.criteo\.(com|net)/,
+  /cas\.criteo\.com/,
+  /ads\.yahoo\.co\.jp/,
+  /amg\.yahoo\.co\.jp/,
+  /m\.webtrends\.com/,
+  /img\.ak\.impact-ad\.jp/,
+  /img\.i-mobile\.co\.jp/,
+  /cdn\.adingo\.jp/,
 ];
 
 const MIN_AD_REQUESTS_FOR_CONCLUSIVE = 3;
@@ -228,6 +255,28 @@ function judge(entry, vanilla, blocked) {
   return { verdict: 'PASS', reasons: [], ratios, adRequests: { vanilla: vanillaAdReq, blocked: blockedAdReq } };
 }
 
+/**
+ * Scroll the page top-to-bottom in viewport-sized steps so lazy-load ads
+ * and bottom-anchored slots fire before we measure.
+ */
+async function autoScroll(page, { step = 800, pause = 400, maxSteps = 12 } = {}) {
+  await page.evaluate(async ({ step, pause, maxSteps }) => {
+    function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }
+    let i = 0;
+    let lastY = -1;
+    while (i < maxSteps) {
+      window.scrollBy(0, step);
+      await wait(pause);
+      const y = window.scrollY;
+      if (y === lastY) break; /* reached bottom */
+      lastY = y;
+      i++;
+    }
+    window.scrollTo(0, 0);
+    await wait(pause);
+  }, { step, pause, maxSteps });
+}
+
 async function runPass(browser, entry, reportDir, passName, passOpts) {
   const harPath = path.join(HAR_DIR, `${entry.id}.har`);
   const ctx = await newContext(browser, harPath, mode, {
@@ -307,6 +356,13 @@ async function runPass(browser, entry, reportDir, passName, passOpts) {
       ? (entry.wait_ms_after_blocker || 2500)
       : (entry.wait_ms_after_load || 4000);
     await page.waitForTimeout(postWait);
+
+    /* Drive the page through viewport-height scrolls so lazy-load and
+       anchor-bottom ad slots fire before we measure. Real Sleipnir users
+       scroll; a static-load harness massively under-counts ads on sites
+       that lazy-mount below the fold (most JP matome/wiki). */
+    await autoScroll(page).catch((e) => consoleLog.push(`[scroll] ${e.message}`));
+    await page.waitForTimeout(800);
 
     metrics = await collectMetrics(page, entry);
     metrics.ads = { ...counters };
