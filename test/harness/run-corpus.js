@@ -93,7 +93,7 @@ function loadCorpus() {
   return filterId ? entries.filter((e) => e.id === filterId) : entries;
 }
 
-async function newContext(browser, harPath, harMode) {
+async function newContext(browser, harPath, harMode, opts = {}) {
   const ctx = await browser.newContext({
     viewport: VIEWPORT,
     deviceScaleFactor: 2.625,
@@ -107,9 +107,30 @@ async function newContext(browser, harPath, harMode) {
     bypassCSP: true,
     recordHar: harMode === 'record' ? { path: harPath, content: 'embed' } : undefined,
   });
+
   if (harMode === 'replay' && fs.existsSync(harPath)) {
     await ctx.routeFromHAR(harPath, { notFound: 'fallback', update: false });
   }
+
+  /* Network-layer ad abort. Must be registered AFTER routeFromHAR because
+     Playwright route handlers are LIFO — the most recently added handler
+     runs first. Without this ordering, HAR would serve cached ad responses
+     before our abort ever runs. */
+  const netBlock = { count: 0, samples: [] };
+  if (opts.networkBlock) {
+    await ctx.route('**/*', (route) => {
+      const url = route.request().url();
+      for (const pat of AD_SERVER_PATTERNS) {
+        if (pat.test(url)) {
+          netBlock.count++;
+          if (netBlock.samples.length < 8) netBlock.samples.push(url);
+          return route.abort();
+        }
+      }
+      return route.fallback();
+    });
+  }
+  ctx.__netBlock = netBlock;
   /* Throttle only during replay. Record mode hits the live network once,
      so we use full bandwidth to avoid flaky timeouts and anti-bot
      slow-response heuristics. Replay is where we want the mobile feel. */
@@ -204,88 +225,103 @@ function judge(entry, vanilla, blocked) {
   return { verdict: 'PASS', reasons: [], ratios, adRequests: { vanilla: vanillaAdReq, blocked: blockedAdReq } };
 }
 
-async function runOne(browser, entry, reportDir) {
+async function runPass(browser, entry, reportDir, passName, passOpts) {
   const harPath = path.join(HAR_DIR, `${entry.id}.har`);
-  const ctx = await newContext(browser, harPath, mode);
+  const ctx = await newContext(browser, harPath, mode, {
+    networkBlock: passOpts.networkBlock,
+  });
   const page = await ctx.newPage();
   const consoleLog = [];
   page.on('console', (m) => consoleLog.push(`[${m.type()}] ${m.text()}`));
   page.on('pageerror', (e) => consoleLog.push(`[pageerror] ${e.message}`));
 
-  const result = { id: entry.id, url: entry.url, group: entry.group, mode };
-
-  /* ad-server request tracking, swapped between vanilla and blocked passes */
-  let adUrls = [];
-  const requestListener = (req) => {
+  const adUrls = [];
+  page.on('request', (req) => {
     const url = req.url();
     for (const pat of AD_SERVER_PATTERNS) {
       if (pat.test(url)) { adUrls.push(url); return; }
     }
-  };
-  page.on('request', requestListener);
+  });
 
+  let metrics, shotErr;
   try {
-    const safeShot = async (name) => {
-      try {
-        await page.screenshot({
-          path: path.join(reportDir, entry.id, name),
-          fullPage: false,
-          timeout: 10000,
-          animations: 'disabled',
-        });
-      } catch (e) {
-        consoleLog.push(`[screenshot-skipped:${name}] ${e.message}`);
-      }
-    };
-
-    /* ---- vanilla pass ---- */
-    adUrls = [];
     await page.goto(entry.url, { waitUntil: 'domcontentloaded', timeout: 90000 })
       .catch((e) => consoleLog.push(`[goto-timeout] ${e.message.split('\n')[0]}`));
-    await page.waitForTimeout(entry.wait_ms_after_load || 4000);
-    const vanillaMetrics = await collectMetrics(page, entry);
-    vanillaMetrics.adRequests = adUrls.length;
-    vanillaMetrics.adSampleUrls = adUrls.slice(0, 8);
-    await safeShot('vanilla.png');
-
-    /* ---- blocker pass (reuse context so HAR/cache match) ---- */
-    adUrls = [];
-    await page.goto('about:blank');
-    await page.goto(entry.url, { waitUntil: 'domcontentloaded', timeout: 90000 })
-      .catch((e) => consoleLog.push(`[goto-timeout] ${e.message.split('\n')[0]}`));
-    /* Some pages (livedoor blog network) perform a client-side redirect after
-       DOMContentLoaded; install the blocker AFTER the URL stabilizes. */
     await page.waitForLoadState('load', { timeout: 30000 }).catch(() => {});
     await page.waitForTimeout(1500);
-    let installed = false;
-    for (let attempt = 0; attempt < 3 && !installed; attempt++) {
-      try {
-        await installBlocker(page, SLEX);
-        installed = true;
-      } catch (e) {
-        if (/Execution context was destroyed/i.test(String(e.message))) {
-          consoleLog.push(`[install-retry:${attempt}] ${e.message}`);
-          await page.waitForLoadState('load', { timeout: 15000 }).catch(() => {});
-          await page.waitForTimeout(1500);
-        } else {
-          throw e;
+
+    if (passOpts.installSlex) {
+      let installed = false;
+      for (let attempt = 0; attempt < 3 && !installed; attempt++) {
+        try {
+          await installBlocker(page, SLEX);
+          installed = true;
+        } catch (e) {
+          if (/Execution context was destroyed/i.test(String(e.message))) {
+            consoleLog.push(`[install-retry:${attempt}] ${e.message}`);
+            await page.waitForLoadState('load', { timeout: 15000 }).catch(() => {});
+            await page.waitForTimeout(1500);
+          } else {
+            throw e;
+          }
         }
       }
+      if (!installed) throw new Error('installBlocker: gave up after 3 retries');
     }
-    if (!installed) throw new Error('installBlocker: gave up after 3 retries');
-    await page.waitForTimeout(entry.wait_ms_after_blocker || 2500);
-    const blockedMetrics = await collectMetrics(page, entry);
-    blockedMetrics.adRequests = adUrls.length;
-    blockedMetrics.adSampleUrls = adUrls.slice(0, 8);
-    await safeShot('blocked.png');
 
-    const verdict = judge(entry, vanillaMetrics, blockedMetrics);
-    Object.assign(result, { vanilla: vanillaMetrics, blocked: blockedMetrics, verdict });
+    const postWait = passOpts.installSlex
+      ? (entry.wait_ms_after_blocker || 2500)
+      : (entry.wait_ms_after_load || 4000);
+    await page.waitForTimeout(postWait);
+
+    metrics = await collectMetrics(page, entry);
+    metrics.adRequests = adUrls.length;
+    metrics.adSampleUrls = adUrls.slice(0, 8);
+    metrics.networkBlocked = ctx.__netBlock ? ctx.__netBlock.count : 0;
+    metrics.networkBlockedSamples = ctx.__netBlock ? ctx.__netBlock.samples : [];
+
+    try {
+      await page.screenshot({
+        path: path.join(reportDir, entry.id, `${passName}.png`),
+        fullPage: false,
+        timeout: 10000,
+        animations: 'disabled',
+      });
+    } catch (e) {
+      shotErr = e.message;
+      consoleLog.push(`[screenshot-skipped:${passName}.png] ${e.message}`);
+    }
+  } finally {
+    fs.appendFileSync(
+      path.join(reportDir, entry.id, 'console.log'),
+      `\n==== ${passName} ====\n` + consoleLog.join('\n') + '\n'
+    );
+    await ctx.close();
+  }
+  return { metrics, shotErr };
+}
+
+async function runOne(browser, entry, reportDir) {
+  fs.writeFileSync(path.join(reportDir, entry.id, 'console.log'), '');
+  const result = { id: entry.id, url: entry.url, group: entry.group, mode };
+
+  try {
+    /* Fresh context per pass so pass-1 cookies/localStorage cannot inflate
+       pass-2 SSP bidding — the earlier "blocked > vanilla ad_requests"
+       pattern was context contamination, not the blocker being broken. */
+    const vanilla = await runPass(browser, entry, reportDir, 'vanilla',
+      { installSlex: false, networkBlock: false });
+    const blocked = await runPass(browser, entry, reportDir, 'blocked',
+      { installSlex: true, networkBlock: true });
+
+    const verdict = judge(entry, vanilla.metrics, blocked.metrics);
+    Object.assign(result, {
+      vanilla: vanilla.metrics,
+      blocked: blocked.metrics,
+      verdict,
+    });
   } catch (err) {
     result.error = String(err && err.stack || err);
-  } finally {
-    fs.writeFileSync(path.join(reportDir, entry.id, 'console.log'), consoleLog.join('\n'));
-    await ctx.close();
   }
   return result;
 }
@@ -326,7 +362,8 @@ process.on('unhandledRejection', (reason) => {
       console.log(`ERROR: ${r.error.split('\n')[0]}`);
     } else if (r.verdict && r.verdict.verdict === 'PASS') {
       const ar = r.verdict.adRequests || {};
-      console.log(`PASS  (ads v:${ar.vanilla}/b:${ar.blocked})`);
+      const nb = (r.blocked && r.blocked.networkBlocked) || 0;
+      console.log(`PASS  (ads v:${ar.vanilla}/b:${ar.blocked}, net-blocked:${nb})`);
     } else if (r.verdict && r.verdict.verdict === 'INCONCLUSIVE') {
       console.log(`INCONCLUSIVE  (${r.verdict.reasons.join('; ')})`);
     } else if (r.verdict && r.verdict.verdict === 'FAIL') {
