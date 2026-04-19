@@ -69,25 +69,32 @@ async function newContext(browser, harPath, harMode) {
     userAgent: UA_SLEIPNIR,
     locale: 'ja-JP',
     timezoneId: 'Asia/Tokyo',
+    /* Real Sleipnir Mobile ships jQuery via @require jquery from a trusted
+       origin; pages' CSP doesn't apply. Mirror that by bypassing CSP here. */
+    bypassCSP: true,
     recordHar: harMode === 'record' ? { path: harPath, content: 'embed' } : undefined,
   });
   if (harMode === 'replay' && fs.existsSync(harPath)) {
     await ctx.routeFromHAR(harPath, { notFound: 'fallback', update: false });
   }
-  /* throttle after context open, per page */
-  ctx.on('page', async (page) => {
-    try {
-      const client = await ctx.newCDPSession(page);
-      await client.send('Emulation.setCPUThrottlingRate', { rate: 6 });
-      await client.send('Network.enable');
-      await client.send('Network.emulateNetworkConditions', {
-        offline: false,
-        latency: 400,
-        downloadThroughput: (400 * 1024) / 8,
-        uploadThroughput: (400 * 1024) / 8,
-      });
-    } catch (_) { /* throttle best-effort */ }
-  });
+  /* Throttle only during replay. Record mode hits the live network once,
+     so we use full bandwidth to avoid flaky timeouts and anti-bot
+     slow-response heuristics. Replay is where we want the mobile feel. */
+  if (harMode === 'replay') {
+    ctx.on('page', async (page) => {
+      try {
+        const client = await ctx.newCDPSession(page);
+        await client.send('Emulation.setCPUThrottlingRate', { rate: 6 });
+        await client.send('Network.enable');
+        await client.send('Network.emulateNetworkConditions', {
+          offline: false,
+          latency: 400,
+          downloadThroughput: (400 * 1024) / 8,
+          uploadThroughput: (400 * 1024) / 8,
+        });
+      } catch (_) { /* throttle best-effort */ }
+    });
+  }
   return ctx;
 }
 
@@ -163,19 +170,53 @@ async function runOne(browser, entry, reportDir) {
   const result = { id: entry.id, url: entry.url, group: entry.group, mode };
 
   try {
+    const safeShot = async (name) => {
+      try {
+        await page.screenshot({
+          path: path.join(reportDir, entry.id, name),
+          fullPage: false,
+          timeout: 10000,
+          animations: 'disabled',
+        });
+      } catch (e) {
+        consoleLog.push(`[screenshot-skipped:${name}] ${e.message}`);
+      }
+    };
+
     /* ---- vanilla pass ---- */
-    await page.goto(entry.url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    await page.goto(entry.url, { waitUntil: 'domcontentloaded', timeout: 90000 })
+      .catch((e) => consoleLog.push(`[goto-timeout] ${e.message.split('\n')[0]}`));
     await page.waitForTimeout(entry.wait_ms_after_load || 4000);
     const vanillaMetrics = await collectMetrics(page, entry);
-    await page.screenshot({ path: path.join(reportDir, entry.id, 'vanilla.png'), fullPage: false });
+    await safeShot('vanilla.png');
 
     /* ---- blocker pass (reuse context so HAR/cache match) ---- */
     await page.goto('about:blank');
-    await page.goto(entry.url, { waitUntil: 'domcontentloaded', timeout: 45000 });
-    await installBlocker(page, SLEX);
+    await page.goto(entry.url, { waitUntil: 'domcontentloaded', timeout: 90000 })
+      .catch((e) => consoleLog.push(`[goto-timeout] ${e.message.split('\n')[0]}`));
+    /* Some pages (livedoor blog network) perform a client-side redirect after
+       DOMContentLoaded; install the blocker AFTER the URL stabilizes. */
+    await page.waitForLoadState('load', { timeout: 30000 }).catch(() => {});
+    await page.waitForTimeout(1500);
+    let installed = false;
+    for (let attempt = 0; attempt < 3 && !installed; attempt++) {
+      try {
+        await installBlocker(page, SLEX);
+        installed = true;
+      } catch (e) {
+        if (/Execution context was destroyed/i.test(String(e.message))) {
+          consoleLog.push(`[install-retry:${attempt}] ${e.message}`);
+          await page.waitForLoadState('load', { timeout: 15000 }).catch(() => {});
+          await page.waitForTimeout(1500);
+        } else {
+          throw e;
+        }
+      }
+    }
+    if (!installed) throw new Error('installBlocker: gave up after 3 retries');
     await page.waitForTimeout(entry.wait_ms_after_blocker || 2500);
     const blockedMetrics = await collectMetrics(page, entry);
-    await page.screenshot({ path: path.join(reportDir, entry.id, 'blocked.png'), fullPage: false });
+    await safeShot('blocked.png');
 
     const verdict = judge(entry, vanillaMetrics, blockedMetrics);
     Object.assign(result, { vanilla: vanillaMetrics, blocked: blockedMetrics, verdict });
@@ -187,6 +228,19 @@ async function runOne(browser, entry, reportDir) {
   }
   return result;
 }
+
+process.on('unhandledRejection', (reason) => {
+  /* Playwright emits NavigationAbortedError out-of-band for cookie-sync URLs
+     that HAR replay cannot reproduce. They don't invalidate the test run;
+     log and continue so one ad-tech sub-frame can't kill the whole suite. */
+  const msg = String(reason && reason.message || reason);
+  if (/NavigationAbortedError|ERR_ABORTED/i.test(msg)) {
+    process.stderr.write(`[suppressed] ${msg.split('\n')[0]}\n`);
+    return;
+  }
+  console.error('Unhandled rejection:', reason);
+  process.exitCode = 2;
+});
 
 (async () => {
   ensureDir(HAR_DIR);

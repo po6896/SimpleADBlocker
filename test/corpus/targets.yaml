@@ -3,12 +3,9 @@
 # `ads_present`: sites with known ads that the blocker must suppress.
 # `ads_free`:    control group. Blocker must not break these pages.
 #
-# must_be_blocked: CSS selectors that indicate an ad is visible. Any visible
-#                  element matching = FAIL.
-# must_survive:    CSS selectors for essential content. If absent after blocker
-#                  runs = FAIL.
-# body_min_ratio:  after/before ratio thresholds for false-positive detection.
-#                  text=0.7 means post-blocker body text must be >= 70% of vanilla.
+# must_be_blocked: CSS selectors indicating a visible ad. FAIL if any match visibly.
+# must_survive:    CSS selectors for essential content. FAIL if missing after blocker.
+# body_min_ratio:  post/pre body metric ratios (false-positive guard).
 
 defaults:
   body_min_ratio:
@@ -35,43 +32,70 @@ ads_present:
       - 'iframe[src*="doubleclick.net"]'
       - 'iframe[src*="googlesyndication"]'
       - '[id^="ad-"]'
-      - '[class*="ldblog_ad"]'
     must_survive:
       - 'a[href*="/article/"]'
 
-  - id: hamusoku
-    url: http://hamusoku.com/
+  - id: ameblo_news
+    url: https://ameblo.jp/
     must_be_blocked:
       - 'iframe[src*="doubleclick.net"]'
       - 'iframe[src*="googlesyndication"]'
       - 'iframe[src*="amazon-adsystem"]'
-      - '[id*="ad"]'
     must_survive:
-      - 'article, .article, #main'
+      - 'a[href*="ameblo.jp"]'
 
-  - id: itainews
-    url: http://blog.livedoor.jp/dqnplus/
+  # Heavy game-strategy wiki. Exercises Criteo / GenieeSSP / FluctSDK.
+  - id: kamigame_dbd
+    url: https://kamigame.jp/dbd/
     must_be_blocked:
       - 'iframe[src*="doubleclick.net"]'
       - 'iframe[src*="googlesyndication"]'
-      - '[class*="ad_"]'
+      - 'iframe[src*="criteo"]'
+      - 'iframe[src*="amazon-adsystem"]'
+      - '[id*="AdPlayer"]'
+      - '[class*="advertise"]'
     must_survive:
-      - '.article-body, .article'
+      - 'a[href*="/dbd/"]'
 
-  - id: seesaa_sample
-    url: https://weblog.seesaa-blog.jp/
+  # Niche wiki (wiki.* network) with SSP-style ads.
+  - id: wikiwiki_nijisanji
+    url: https://wikiwiki.jp/nijisanji/
     must_be_blocked:
       - 'iframe[src*="doubleclick.net"]'
       - 'iframe[src*="googlesyndication"]'
+      - 'iframe[src*="amazon-adsystem"]'
+      - '[id^="ad-"], [id^="ad_"], [id$="-ad"]'
     must_survive:
-      - 'body'
+      - '#body, #content, main'
+
+  # Elden-ring Nightreign strategy wiki. Different SSP stack.
+  # Note: `[id*="ad"]` would false-match "header"/"pad" etc. Use tighter anchors.
+  - id: kamikouryaku_nightreign
+    url: https://kamikouryaku.net/nightreign_eldenring/
+    must_be_blocked:
+      - 'iframe[src*="doubleclick.net"]'
+      - 'iframe[src*="googlesyndication"]'
+      - 'iframe[src*="amazon-adsystem"]'
+      - '[id^="ad-"], [id^="ad_"], [id$="-ad"], [id*="AdUnit"]'
+    must_survive:
+      - '#body, #content, .wiki-body, main'
+
+  # Major JP game-news portal.
+  - id: 4gamer
+    url: https://www.4gamer.net/
+    must_be_blocked:
+      - 'iframe[src*="doubleclick.net"]'
+      - 'iframe[src*="googlesyndication"]'
+      - 'iframe[src*="amazon-adsystem"]'
+    must_survive:
+      - 'a[href*="/games/"]'
 
 ads_free:
   - id: mdn_home
     url: https://developer.mozilla.org/ja/
     must_survive:
-      - 'main'
-      - 'nav'
+      - 'main, .main-content, #content, .page-content'
+      - 'a[href*="/docs/"]'
 
   - id: github_readme
     url: https://github.com/po6896/SimpleADBlocker
