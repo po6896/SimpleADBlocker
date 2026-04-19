@@ -12,5 +12,6 @@ test/strip-comments.js
 # Generated artifacts
 test/reports/
 test/corpus/har/
+test/corpus/baseline.json
 test/corpus/candidates.md
 test/manual-checklist.md
