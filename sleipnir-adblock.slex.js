@@ -9,9 +9,11 @@
 // @icon            data:image/png;base64,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
 // @include         http://*
 // @include         https://*
-// @version         5.3.2
+// @version         5.4.0
+// @history         5.4.0 Kill empty ad shells and IAB-sized wrappers to fix CLS.
 // @history         5.3.2 Add @icon metadata for gallery upload.
 // @history         4.8.1 Initial gallery release.
+// @history:ja      5.4.0 空の広告shell/IAB規格サイズwrapperも削除してCLS改善。
 // @history:ja      5.3.2 ギャラリーアップロード用に @icon を追加。
 // @history:ja      4.8.1 ギャラリー初回リリース。
 // @require         api
@@ -1136,6 +1138,36 @@
     'div[style*="width:320px"][style*="height:100px"]'
   ].join(',') + hideDecl);
 
+  /* Hide known ad-slot wrappers pre-emptively, BEFORE the SSP mounts them,
+     so the 300x250 / 728x90 shells never appear and CLS stays quiet.
+     Id/class prefixes chosen from GAM, Yahoo Yads, common CMS patterns. */
+  SLEX_addStyle([
+    'div[id^="yads_"]', 'div[id^="div-gpt-ad"]', 'div[id^="google_ads_"]',
+    'div[id^="ezoic-pub-ad-"]', 'div[id^="ad_position_"]',
+    'div[id^="ad-box-"]', 'div[id^="AdUnit_"]',
+    'ins.adsbygoogle', '[data-ad-slot]',
+    '[data-google-query-id]'
+  ].join(',') + hideDecl);
+
+  /* Parent-selector (:has) — the real 300x250 shell is usually an outer
+     styled-components wrapper with a hash class, which we cannot target
+     directly. Match "any element whose direct child is a known ad slot"
+     instead. Chromium 105+ supports :has(); older engines silently ignore
+     the whole rule, so the fallback above still runs. */
+  try {
+    SLEX_addStyle(
+      'div:has(> [id^="yads_"]),' +
+      'div:has(> [id^="div-gpt-ad"]),' +
+      'div:has(> [id^="google_ads_"]),' +
+      'div:has(> ins.adsbygoogle),' +
+      'div:has(> iframe[src*="doubleclick.net"]),' +
+      'div:has(> iframe[src*="googlesyndication"]),' +
+      'div:has(> iframe[src*="amazon-adsystem"]),' +
+      'div:has(> iframe[src*="criteo"])'
+      + hideDecl
+    );
+  } catch (e) {}
+
   SLEX_addStyle(
     'div.adsbox[style*="left:-9999px"],' +
     'div.ad-placement[style*="left:-9999px"],' +
@@ -1157,12 +1189,84 @@
     'iframe[src*="juicyads"]', 'iframe[src*="adskeeper.com"]',
     'iframe[src*="gliacloud.com"]', 'iframe[src*="bance.jp"]',
     'iframe[src*="i2ad.jp"]',
-    'div[id^="div-gpt-ad"]:empty', 'div[id^="ezoic-pub-ad-"]:empty'
+    'iframe[src*="yads.yjtag.yahoo.co.jp"]', 'iframe[src*="yads.yahoo"]',
+    'script[src*="yads.yjtag.yahoo.co.jp"]',
+    'div[id^="yads_"]', 'div[id^="div-gpt-ad"]:empty',
+    'div[id^="ezoic-pub-ad-"]:empty'
   ].join(', ');
 
   var PR_TEXT_RE = /^\s*(\[PR\]|【PR】|PR|広告|スポンサーリンク|Sponsored|Advertisement)\s*$/i;
 
-  function removeAdIframes() { $(REMOVE_SELECTORS).remove(); }
+  /* IAB standard ad-slot sizes (and common mobile variants). Sites built
+     with styled-components / CSS-in-JS pre-size empty wrappers at these
+     exact dimensions before the ad mounts; removing the iframe alone
+     leaves an empty shell that contributes to CLS. Tolerance ±2px for
+     sub-pixel rounding. */
+  var IAB_AD_SIZES = [
+    [300, 250], [336, 280], [728, 90], [970, 90], [970, 250],
+    [160, 600], [300, 600], [300, 1050], [320, 50], [320, 100], [468, 60]
+  ];
+
+  function elIsContentless(el) {
+    if (!el) return false;
+    var t = el.innerText;
+    if (t && t.replace(/\s/g, '').length > 0) return false;
+    /* Media / link descendants count as content — but only if they have
+       actual dimensions. Yahoo Yads nests a 0x0 tracking iframe inside a
+       styled 300x250 slot; without the zero-size check we'd keep the
+       empty shell forever. */
+    var media = el.querySelectorAll && el.querySelectorAll('img, video, svg, canvas, a[href], iframe, object, embed');
+    if (media) {
+      for (var i = 0; i < media.length; i++) {
+        var m = media[i];
+        var rr = m.getBoundingClientRect();
+        if (rr.width >= 4 && rr.height >= 4) return false;
+      }
+    }
+    return true;
+  }
+
+  function unwrapEmptyAncestors(startParent) {
+    var parent = startParent;
+    for (var i = 0; i < 3 && parent; i++) {
+      if (parent === document.body || parent === document.documentElement) break;
+      if (!elIsContentless(parent)) break;
+      var gp = parent.parentNode;
+      if (!gp) break;
+      try { gp.removeChild(parent); } catch (e) { break; }
+      parent = gp;
+    }
+  }
+
+  function killAdSizedEmpties() {
+    var all = document.querySelectorAll('div, aside, section, ins');
+    for (var i = 0; i < all.length; i++) {
+      var el = all[i];
+      var r = el.getBoundingClientRect();
+      var w = Math.round(r.width), h = Math.round(r.height);
+      if (w < 100 || h < 40) continue;
+      for (var j = 0; j < IAB_AD_SIZES.length; j++) {
+        if (Math.abs(w - IAB_AD_SIZES[j][0]) <= 2 &&
+            Math.abs(h - IAB_AD_SIZES[j][1]) <= 2 &&
+            elIsContentless(el)) {
+          var parent = el.parentNode;
+          try { parent.removeChild(el); } catch (e) {}
+          unwrapEmptyAncestors(parent);
+          break;
+        }
+      }
+    }
+  }
+
+  function removeAdIframes() {
+    $(REMOVE_SELECTORS).each(function () {
+      var node = this;
+      var parent = node.parentNode;
+      try { parent.removeChild(node); } catch (e) {}
+      unwrapEmptyAncestors(parent);
+    });
+    killAdSizedEmpties();
+  }
 
   function cleanPRLabels() {
     $('span, label, small').each(function () {
@@ -1931,9 +2035,9 @@
     rewriteAntennaLinks();
   }, 5000);
 
-  _setTimeout(heuristicScan, 8000);
-  _setTimeout(heuristicScan, 15000);
-  _setTimeout(heuristicScan, 30000);
+  _setTimeout(function () { heuristicScan(); killAdSizedEmpties(); }, 8000);
+  _setTimeout(function () { heuristicScan(); killAdSizedEmpties(); }, 15000);
+  _setTimeout(function () { heuristicScan(); killAdSizedEmpties(); }, 30000);
 
   _setTimeout(loadExternalFilters, 2000);
 
