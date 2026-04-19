@@ -362,7 +362,13 @@ async function runPass(browser, entry, reportDir, passName, passOpts) {
        scroll; a static-load harness massively under-counts ads on sites
        that lazy-mount below the fold (most JP matome/wiki). */
     await autoScroll(page).catch((e) => consoleLog.push(`[scroll] ${e.message}`));
-    await page.waitForTimeout(800);
+
+    /* Without this, scroll-triggered ad requests are still in flight when we
+       collect metrics, so finished counts hit 0 while issued > 0 and the
+       report looks inconsistent. networkidle + 2s grace flushes pending
+       requestfinished events. Cap at 8s — some sites never idle. */
+    await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
+    await page.waitForTimeout(2000);
 
     metrics = await collectMetrics(page, entry);
     metrics.ads = { ...counters };

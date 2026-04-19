@@ -35,14 +35,17 @@ ads_present:
     must_survive:
       - 'a[href*="/article/"]'
 
-  - id: ameblo_news
-    url: https://ameblo.jp/
+  # Swapped from ameblo (thin home + crashing article URL) to fc2 blog —
+  # fc2 runs i-mobile / Yahoo ads heavily. Article pulled from Brave history.
+  - id: fc2blog_article
+    url: http://nlst3.blog.fc2.com/blog-entry-2222.html
     must_be_blocked:
       - 'iframe[src*="doubleclick.net"]'
       - 'iframe[src*="googlesyndication"]'
       - 'iframe[src*="amazon-adsystem"]'
+      - 'iframe[src*="i-mobile"]'
     must_survive:
-      - 'a[href*="ameblo.jp"]'
+      - '.entry_body, #entry, article'
 
   # Heavy game-strategy wiki. Exercises Criteo / GenieeSSP / FluctSDK.
   - id: kamigame_dbd
@@ -80,15 +83,17 @@ ads_present:
     must_survive:
       - '#body, #content, .wiki-body, main'
 
-  # Major JP game-news portal.
-  - id: 4gamer
-    url: https://www.4gamer.net/
+  # 4gamer home + list pages both under-served (1 / 0 ad requests).
+  # ITmedia is a high-volume JP tech news site running GAM + i-mobile +
+  # scorecardresearch; news index guaranteed to carry ads.
+  - id: itmedia_news
+    url: https://www.itmedia.co.jp/news/
     must_be_blocked:
       - 'iframe[src*="doubleclick.net"]'
       - 'iframe[src*="googlesyndication"]'
       - 'iframe[src*="amazon-adsystem"]'
     must_survive:
-      - 'a[href*="/games/"]'
+      - 'a[href*="/news/articles/"]'
 
 ads_free:
   - id: mdn_home
