@@ -26,8 +26,27 @@ const { installBlocker } = require('./sleipnir-shim');
 const ROOT = path.resolve(__dirname, '..', '..');
 const SLEX = path.join(ROOT, 'sleipnir-adblock.slex.js');
 const CORPUS_PATH = path.join(ROOT, 'test', 'corpus', 'targets.yaml');
+const BASELINE_PATH = path.join(ROOT, 'test', 'corpus', 'baseline.json');
 const HAR_DIR = path.join(ROOT, 'test', 'corpus', 'har');
 const REPORT_DIR = path.join(ROOT, 'test', 'reports');
+
+/**
+ * Per-site vanilla baseline (text/images/scroll) captured at record time
+ * and reused across replays. Replaces the hard-coded 0.7/0.5/0.5 ratio
+ * cut-offs with "post-blocker metric >= 85% of recorded vanilla baseline".
+ * Wikipedia's text is naturally ~0.95× its own baseline while Yahoo News
+ * can legitimately drop to 0.60× without anything being wrong — one
+ * global threshold is the wrong model.
+ */
+function loadBaseline() {
+  if (!fs.existsSync(BASELINE_PATH)) return {};
+  try { return JSON.parse(fs.readFileSync(BASELINE_PATH, 'utf-8')); }
+  catch (_) { return {}; }
+}
+function saveBaseline(obj) {
+  fs.writeFileSync(BASELINE_PATH, JSON.stringify(obj, null, 2) + '\n');
+}
+const DYNAMIC_BASELINE_RATIO = 0.85;
 
 const UA_SLEIPNIR =
   'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 ' +
@@ -96,7 +115,9 @@ const AD_SERVER_PATTERNS = [
 
 const MIN_AD_REQUESTS_FOR_CONCLUSIVE = 3;
 
-const mode = process.argv.includes('--record') ? 'record' : 'replay';
+const mode = process.argv.includes('--record') ? 'record'
+  : process.argv.includes('--live') ? 'live'
+  : 'replay';
 const filterId = argAfter('--only');
 
 function argAfter(flag) {
@@ -134,10 +155,14 @@ async function newContext(browser, harPath, harMode, opts = {}) {
     bypassCSP: true,
     recordHar: harMode === 'record' ? { path: harPath, content: 'embed' } : undefined,
   });
+  /* live-mode goes out to the network fresh every time: no HAR replay, no
+     throttle — used as an auxiliary weekly sanity run to catch HAR
+     staleness and prebid nonce expiry. */
 
   if (harMode === 'replay' && fs.existsSync(harPath)) {
     await ctx.routeFromHAR(harPath, { notFound: 'fallback', update: false });
   }
+  /* live mode: no routeFromHAR. Each context hits the actual origin. */
 
   /* Network-layer ad abort. Must be registered AFTER routeFromHAR because
      Playwright route handlers are LIFO — the most recently added handler
@@ -161,7 +186,7 @@ async function newContext(browser, harPath, harMode, opts = {}) {
     });
   }
   ctx.__netBlock = netBlock;
-  /* Throttle only during replay. Record mode hits the live network once,
+  /* Throttle only during replay. Record / live hit the live network once,
      so we use full bandwidth to avoid flaky timeouts and anti-bot
      slow-response heuristics. Replay is where we want the mobile feel. */
   if (harMode === 'replay') {
@@ -209,11 +234,35 @@ async function collectMetrics(page, entry) {
       const vis = nodes.filter(visible);
       surviveHits.push({ selector: sel, total: nodes.length, visible: vis.length });
     }
-    return { text, images, scroll, blockedHits, surviveHits };
+    /* Pick up whatever layout-shift observer installed earlier reported.
+       A blocker that leaves empty iframe shells will push CLS > 0.1 even
+       though the ad is visually gone. Treat that as a WARN, not a FAIL. */
+    const cls = (window.__slexCls && typeof window.__slexCls.value === 'number')
+      ? window.__slexCls.value : null;
+    return { text, images, scroll, blockedHits, surviveHits, cls };
   }, entry);
 }
 
-function judge(entry, vanilla, blocked) {
+/**
+ * Install a layout-shift observer as early as possible so we catch shifts
+ * caused by ad slots collapsing after the blocker removes them. The value
+ * is read back during collectMetrics.
+ */
+async function installClsObserver(page) {
+  await page.addInitScript(() => {
+    window.__slexCls = { value: 0 };
+    try {
+      const po = new PerformanceObserver((list) => {
+        for (const e of list.getEntries()) {
+          if (!e.hadRecentInput) window.__slexCls.value += e.value;
+        }
+      });
+      po.observe({ type: 'layout-shift', buffered: true });
+    } catch (_) { /* older browser */ }
+  });
+}
+
+function judge(entry, vanilla, blocked, baseline) {
   const reasons = [];
   const failures = [];
   for (const hit of blocked.blockedHits) {
@@ -226,16 +275,40 @@ function judge(entry, vanilla, blocked) {
       failures.push(`must_survive missing: ${hit.selector}`);
     }
   }
-  const ratio = entry.body_min_ratio || { text: 0.7, images: 0.5, scroll: 0.5 };
+
+  /* Prefer the persisted baseline when available (captured at record time).
+     It is stable across replays and represents the "healthy page" state for
+     this site. The current vanilla reading can drift if HAR replay fires
+     fewer requests than record. Fall back to in-run vanilla only when the
+     baseline does not yet exist. */
+  const src = baseline || vanilla;
+  const srcKind = baseline ? 'baseline' : 'vanilla';
   const ratios = {
-    text: vanilla.text ? blocked.text / vanilla.text : 1,
-    images: vanilla.images ? blocked.images / vanilla.images : 1,
-    scroll: vanilla.scroll ? blocked.scroll / vanilla.scroll : 1,
+    text: src.text ? blocked.text / src.text : 1,
+    images: src.images ? blocked.images / src.images : 1,
+    scroll: src.scroll ? blocked.scroll / src.scroll : 1,
   };
+  /* Legacy per-entry override still wins, otherwise the new dynamic cutoff. */
+  const legacy = entry.body_min_ratio;
+  const threshold = legacy
+    ? legacy
+    : { text: DYNAMIC_BASELINE_RATIO, images: DYNAMIC_BASELINE_RATIO, scroll: DYNAMIC_BASELINE_RATIO };
   for (const k of ['text', 'images', 'scroll']) {
-    if (ratios[k] < ratio[k]) {
-      failures.push(`body ${k} shrank to ${(ratios[k] * 100).toFixed(1)}% (threshold ${(ratio[k] * 100).toFixed(0)}%)`);
+    if (ratios[k] < threshold[k]) {
+      failures.push(
+        `body ${k} ${(ratios[k] * 100).toFixed(1)}% of ${srcKind} ` +
+        `(threshold ${(threshold[k] * 100).toFixed(0)}%)`
+      );
     }
+  }
+
+  /* CLS warning. Not a FAIL — the blocker removing ads necessarily causes
+     some shift — but > 0.1 indicates the replacement is not graceful and
+     empty iframe shells may be visible. */
+  const warnings = [];
+  const CLS_WARN = 0.1;
+  if (typeof blocked.cls === 'number' && blocked.cls > CLS_WARN) {
+    warnings.push(`CLS ${blocked.cls.toFixed(3)} (> ${CLS_WARN}); check empty ad shells`);
   }
 
   /* 3-state verdict: PASS / FAIL / INCONCLUSIVE.
@@ -247,12 +320,12 @@ function judge(entry, vanilla, blocked) {
   const blockedAdReq = blocked.adRequests || 0;
   if (entry.group === 'ads_present' && vanillaAdReq < MIN_AD_REQUESTS_FOR_CONCLUSIVE) {
     reasons.push(`vanilla ad-server requests = ${vanillaAdReq} (need >= ${MIN_AD_REQUESTS_FOR_CONCLUSIVE})`);
-    return { verdict: 'INCONCLUSIVE', reasons, failures, ratios, adRequests: { vanilla: vanillaAdReq, blocked: blockedAdReq } };
+    return { verdict: 'INCONCLUSIVE', reasons, failures, ratios, warnings, adRequests: { vanilla: vanillaAdReq, blocked: blockedAdReq } };
   }
   if (failures.length > 0) {
-    return { verdict: 'FAIL', reasons: failures, ratios, adRequests: { vanilla: vanillaAdReq, blocked: blockedAdReq } };
+    return { verdict: 'FAIL', reasons: failures, ratios, warnings, adRequests: { vanilla: vanillaAdReq, blocked: blockedAdReq } };
   }
-  return { verdict: 'PASS', reasons: [], ratios, adRequests: { vanilla: vanillaAdReq, blocked: blockedAdReq } };
+  return { verdict: 'PASS', reasons: [], ratios, warnings, adRequests: { vanilla: vanillaAdReq, blocked: blockedAdReq } };
 }
 
 /**
@@ -283,6 +356,7 @@ async function runPass(browser, entry, reportDir, passName, passOpts) {
     networkBlock: passOpts.networkBlock,
   });
   const page = await ctx.newPage();
+  await installClsObserver(page);
   const consoleLog = [];
   page.on('console', (m) => consoleLog.push(`[${m.type()}] ${m.text()}`));
   page.on('pageerror', (e) => consoleLog.push(`[pageerror] ${e.message}`));
@@ -399,7 +473,7 @@ async function runPass(browser, entry, reportDir, passName, passOpts) {
   return { metrics, shotErr };
 }
 
-async function runOne(browser, entry, reportDir) {
+async function runOne(browser, entry, reportDir, baselineStore) {
   fs.writeFileSync(path.join(reportDir, entry.id, 'console.log'), '');
   const result = { id: entry.id, url: entry.url, group: entry.group, mode };
 
@@ -412,10 +486,23 @@ async function runOne(browser, entry, reportDir) {
     const blocked = await runPass(browser, entry, reportDir, 'blocked',
       { installSlex: true, networkBlock: true });
 
-    const verdict = judge(entry, vanilla.metrics, blocked.metrics);
+    /* Persist vanilla snapshot as the baseline during record; it becomes the
+       stable reference for every replay until the next record cycle. */
+    if (mode === 'record' && baselineStore && vanilla.metrics) {
+      baselineStore[entry.id] = {
+        text: vanilla.metrics.text,
+        images: vanilla.metrics.images,
+        scroll: vanilla.metrics.scroll,
+        recordedAt: new Date().toISOString(),
+      };
+    }
+    const baseline = baselineStore && baselineStore[entry.id];
+
+    const verdict = judge(entry, vanilla.metrics, blocked.metrics, baseline);
     Object.assign(result, {
       vanilla: vanilla.metrics,
       blocked: blocked.metrics,
+      baseline,
       verdict,
     });
   } catch (err) {
@@ -451,10 +538,11 @@ process.on('unhandledRejection', (reason) => {
   for (const e of corpus) ensureDir(path.join(reportDir, e.id));
 
   const browser = await chromium.launch({ headless: true });
+  const baselineStore = loadBaseline();
   const results = [];
   for (const entry of corpus) {
     process.stdout.write(`[${mode}] ${entry.id} ... `);
-    const r = await runOne(browser, entry, reportDir);
+    const r = await runOne(browser, entry, reportDir, baselineStore);
     results.push(r);
     if (r.error) {
       console.log(`ERROR: ${r.error.split('\n')[0]}`);
@@ -463,10 +551,12 @@ process.on('unhandledRejection', (reason) => {
       const b = (r.blocked && r.blocked.ads) || {};
       const vSurv = (r.vanilla && r.vanilla.adSurvivors) || 0;
       const bSurv = (r.blocked && r.blocked.adSurvivors) || 0;
+      const warn = (r.verdict.warnings && r.verdict.warnings.length)
+        ? ` [WARN: ${r.verdict.warnings.join('; ')}]` : '';
       console.log(
         `PASS  vanilla{iss:${v.issued||0} fin:${v.finished||0} red:${v.redirected||0} fail:${v.failed||0}} ` +
         `blocked{iss:${b.issued||0} abt:${b.aborted||0} fin:${b.finished||0} red:${b.redirected||0} fail:${b.failed||0}} ` +
-        `survivors v:${vSurv}->b:${bSurv}`
+        `survivors v:${vSurv}->b:${bSurv}${warn}`
       );
     } else if (r.verdict && r.verdict.verdict === 'INCONCLUSIVE') {
       console.log(`INCONCLUSIVE  (${r.verdict.reasons.join('; ')})`);
@@ -478,6 +568,10 @@ process.on('unhandledRejection', (reason) => {
     }
   }
   await browser.close();
+
+  if (mode === 'record') {
+    saveBaseline(baselineStore);
+  }
 
   const summary = { mode, stamp, results };
   fs.writeFileSync(path.join(reportDir, 'summary.json'), JSON.stringify(summary, null, 2));
