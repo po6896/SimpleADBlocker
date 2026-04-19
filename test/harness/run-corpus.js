@@ -21,7 +21,7 @@ const { chromium } = require('playwright-extra');
 const stealth = require('puppeteer-extra-plugin-stealth')();
 chromium.use(stealth);
 
-const { installBlocker } = require('./sleipnir-shim');
+const { installBlocker, buildInitScript } = require('./sleipnir-shim');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const SLEX = path.join(ROOT, 'sleipnir-adblock.slex.js');
@@ -119,6 +119,10 @@ const mode = process.argv.includes('--record') ? 'record'
   : process.argv.includes('--live') ? 'live'
   : 'replay';
 const filterId = argAfter('--only');
+/* Record is sequential by default — live network capture is fragile under
+   parallel load and the HAR files should be clean single-session snapshots.
+   Replay can safely run 4-wide; Playwright contexts are cheap and isolated. */
+const workers = parseInt(argAfter('--workers') || (mode === 'record' ? '1' : '4'), 10);
 
 function argAfter(flag) {
   const i = process.argv.indexOf(flag);
@@ -539,34 +543,48 @@ process.on('unhandledRejection', (reason) => {
 
   const browser = await chromium.launch({ headless: true });
   const baselineStore = loadBaseline();
-  const results = [];
-  for (const entry of corpus) {
-    process.stdout.write(`[${mode}] ${entry.id} ... `);
-    const r = await runOne(browser, entry, reportDir, baselineStore);
-    results.push(r);
-    if (r.error) {
-      console.log(`ERROR: ${r.error.split('\n')[0]}`);
-    } else if (r.verdict && r.verdict.verdict === 'PASS') {
+  const results = new Array(corpus.length);
+
+  function formatResult(entry, r) {
+    const tag = `[${mode}] ${entry.id}`;
+    if (r.error) return `${tag} ... ERROR: ${r.error.split('\n')[0]}`;
+    if (!r.verdict) return `${tag} ... recorded`;
+    if (r.verdict.verdict === 'PASS') {
       const v = (r.vanilla && r.vanilla.ads) || {};
       const b = (r.blocked && r.blocked.ads) || {};
       const vSurv = (r.vanilla && r.vanilla.adSurvivors) || 0;
       const bSurv = (r.blocked && r.blocked.adSurvivors) || 0;
       const warn = (r.verdict.warnings && r.verdict.warnings.length)
         ? ` [WARN: ${r.verdict.warnings.join('; ')}]` : '';
-      console.log(
-        `PASS  vanilla{iss:${v.issued||0} fin:${v.finished||0} red:${v.redirected||0} fail:${v.failed||0}} ` +
+      return `${tag} ... PASS  vanilla{iss:${v.issued||0} fin:${v.finished||0} red:${v.redirected||0} fail:${v.failed||0}} ` +
         `blocked{iss:${b.issued||0} abt:${b.aborted||0} fin:${b.finished||0} red:${b.redirected||0} fail:${b.failed||0}} ` +
-        `survivors v:${vSurv}->b:${bSurv}${warn}`
-      );
-    } else if (r.verdict && r.verdict.verdict === 'INCONCLUSIVE') {
-      console.log(`INCONCLUSIVE  (${r.verdict.reasons.join('; ')})`);
-    } else if (r.verdict && r.verdict.verdict === 'FAIL') {
-      console.log(`FAIL  (${r.verdict.reasons.length})`);
-      for (const why of r.verdict.reasons) console.log('  - ' + why);
-    } else {
-      console.log('recorded');
+        `survivors v:${vSurv}->b:${bSurv}${warn}`;
+    }
+    if (r.verdict.verdict === 'INCONCLUSIVE')
+      return `${tag} ... INCONCLUSIVE  (${r.verdict.reasons.join('; ')})`;
+    if (r.verdict.verdict === 'FAIL') {
+      const lines = [`${tag} ... FAIL  (${r.verdict.reasons.length})`];
+      for (const why of r.verdict.reasons) lines.push('  - ' + why);
+      return lines.join('\n');
+    }
+    return `${tag} ... ${r.verdict.verdict}`;
+  }
+
+  let nextIdx = 0;
+  async function worker() {
+    while (true) {
+      const i = nextIdx++;
+      if (i >= corpus.length) break;
+      const entry = corpus[i];
+      const r = await runOne(browser, entry, reportDir, baselineStore);
+      results[i] = r;
+      console.log(formatResult(entry, r));
     }
   }
+  const pool = [];
+  for (let w = 0; w < Math.max(1, workers); w++) pool.push(worker());
+  await Promise.all(pool);
+
   await browser.close();
 
   if (mode === 'record') {
@@ -574,7 +592,15 @@ process.on('unhandledRejection', (reason) => {
   }
 
   const summary = { mode, stamp, results };
-  fs.writeFileSync(path.join(reportDir, 'summary.json'), JSON.stringify(summary, null, 2));
+  const summaryPath = path.join(reportDir, 'summary.json');
+  fs.writeFileSync(summaryPath, JSON.stringify(summary, null, 2));
+
+  /* Render an HTML dashboard beside the summary.json. Best-effort — a broken
+     report should never fail the test run. */
+  try {
+    const { renderHTML } = require('./emit-report');
+    fs.writeFileSync(path.join(reportDir, 'index.html'), renderHTML(summary));
+  } catch (e) { console.error('[report] ' + e.message); }
 
   const by = { PASS: 0, FAIL: 0, INCONCLUSIVE: 0, ERROR: 0 };
   for (const r of results) {

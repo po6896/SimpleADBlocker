@@ -13,8 +13,15 @@
  *   Playwright route rewrites when HAR replay is active.
  */
 const fs = require('fs');
+const path = require('path');
 
-const JQUERY_CDN = 'https://code.jquery.com/jquery-3.7.1.min.js';
+const JQUERY_PATH = path.join(__dirname, '..', '..', 'node_modules', 'jquery', 'dist', 'jquery.min.js');
+let _jqueryCache = null;
+function jqueryText() {
+  if (_jqueryCache) return _jqueryCache;
+  _jqueryCache = fs.readFileSync(JQUERY_PATH, 'utf-8');
+  return _jqueryCache;
+}
 
 /**
  * Extract the JS body from a .slex.js file (strip ==UserScript== block).
@@ -53,12 +60,52 @@ function stripNewlines(body) {
  * Real Sleipnir eval appears to be sloppy-mode (silent failures on frozen
  * properties are tolerated; the blocker has several anti-adblock sites in
  * mind where direct assignments to document.createElement etc. are expected
- * to silently fail). Strip the IIFE's `'use strict'` so that Playwright's
- * Chromium behaves the same way. This affects only the harness, not
- * production artifacts.
+ * to silently fail). Strip only the IIFE's Directive Prologue — an AST walk
+ * catches exactly the "use strict" directives while leaving template-literal
+ * strings and comments alone, which the earlier regex version would stomp
+ * on if the slex ever got minified.
  */
 function dropUseStrict(body) {
-  return body.replace(/(['"])use strict\1\s*;?/g, '');
+  const acorn = require('acorn');
+  let ast;
+  try {
+    ast = acorn.parse(body, { ecmaVersion: 'latest', allowReturnOutsideFunction: true });
+  } catch (_) {
+    /* Parse failed (rare, probably a code quirk) — fall back to a tight
+       regex that only matches at statement boundaries. */
+    return body.replace(/(^|;|\{|\})\s*(['"])use strict\2\s*;?/g, '$1');
+  }
+  /* Collect directive ranges from every function scope's Directive Prologue. */
+  const ranges = [];
+  function visit(node) {
+    if (!node || typeof node !== 'object') return;
+    const body = Array.isArray(node.body) ? node.body
+      : (node.body && Array.isArray(node.body.body)) ? node.body.body : null;
+    if (body) {
+      for (const stmt of body) {
+        if (stmt.type !== 'ExpressionStatement') break;
+        const e = stmt.expression;
+        if (e.type !== 'Literal' || typeof e.value !== 'string') break;
+        if (stmt.directive !== 'use strict') continue;
+        ranges.push([stmt.start, stmt.end]);
+      }
+    }
+    for (const k in node) {
+      if (!Object.prototype.hasOwnProperty.call(node, k)) continue;
+      const v = node[k];
+      if (v && typeof v === 'object') {
+        if (Array.isArray(v)) v.forEach(visit); else visit(v);
+      }
+    }
+  }
+  visit(ast);
+  if (ranges.length === 0) return body;
+  /* Replace directive byte ranges with spaces to preserve offsets / line numbers. */
+  const out = body.split('');
+  for (const [s, e] of ranges) {
+    for (let i = s; i < e; i++) out[i] = ' ';
+  }
+  return out.join('');
 }
 
 /**
@@ -76,7 +123,15 @@ async function installBlocker(page, slexPath, opts = {}) {
   const sloppy = dropUseStrict(body);
   const code = faithfulEval ? stripNewlines(sloppy) : sloppy;
 
-  await page.addScriptTag({ url: JQUERY_CDN });
+  /* jQuery loads via addScriptTag after goto. We evaluated moving to
+     context.addInitScript for document_start timing, but jQuery 3.x/4.x
+     expect documentElement to exist and crash inside an addInitScript
+     that fires before the document is fully set up. Real Sleipnir's
+     @require jquery also loads after DOMContentLoaded, so addScriptTag
+     actually matches production timing more closely than document_start
+     injection would. */
+  const jq = jqueryText();
+  await page.addScriptTag({ content: jq });
 
   /* Some sites (and some WebViews) mark hot document methods as writable:false
      via Object.defineProperty, which breaks the blocker's strict-mode direct
@@ -147,9 +202,75 @@ async function installBlocker(page, slexPath, opts = {}) {
   }, code);
 }
 
+/**
+ * Build the document-start init script: jQuery + SLEX polyfills + the
+ * document.createElement/write/writeln unfreeze. Returns a string that
+ * context.addInitScript({ content }) can accept.
+ */
+function buildInitScript() {
+  const unfreezeAndPolyfill = `
+    (function(){
+      try {
+        var names = ['createElement', 'write', 'writeln'];
+        for (var i=0; i<names.length; i++) {
+          var n = names[i];
+          try {
+            var orig = document[n];
+            Object.defineProperty(document, n, {
+              value: orig, writable: true, configurable: true, enumerable: false
+            });
+          } catch(_) {}
+        }
+      } catch(_) {}
+
+      if (!window.SLEX_addStyle) {
+        window.SLEX_addStyle = function(css){
+          var s = document.createElement('style');
+          s.textContent = css;
+          (document.head || document.documentElement).appendChild(s);
+          return s;
+        };
+      }
+      if (!window.SLEX_xmlhttpRequest) {
+        window.SLEX_xmlhttpRequest = function(details){
+          var init = {
+            method: details.method || 'GET',
+            headers: details.headers || {},
+            body: details.data,
+            credentials: 'omit'
+          };
+          return fetch(details.url, init).then(function(res){
+            return res.text().then(function(text){
+              var response = {
+                status: res.status,
+                statusText: res.statusText,
+                responseText: text,
+                responseHeaders: Array.from(res.headers.entries()).map(function(e){return e[0]+': '+e[1];}).join('\\r\\n'),
+                finalUrl: res.url
+              };
+              if (typeof details.onload === 'function') details.onload(response);
+              return response;
+            });
+          })['catch'](function(err){
+            if (typeof details.onerror === 'function') details.onerror({ error: String(err) });
+          });
+        };
+      }
+      if (!window.SLEX_setValue) {
+        window.SLEX_setValue = function(k,v){ try { localStorage.setItem('slex_'+k, JSON.stringify(v)); } catch(_) {} };
+        window.SLEX_getValue = function(k,d){
+          try { var v = localStorage.getItem('slex_'+k); return v==null?d:JSON.parse(v); } catch(_) { return d; }
+        };
+      }
+    })();
+  `;
+  return jqueryText() + '\n' + unfreezeAndPolyfill;
+}
+
 module.exports = {
   splitUserScript,
   stripNewlines,
   dropUseStrict,
   installBlocker,
+  buildInitScript,
 };
