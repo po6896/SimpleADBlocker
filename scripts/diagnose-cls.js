@@ -34,6 +34,32 @@ const url = process.argv[3] || 'https://news.yahoo.co.jp/';
   const page = await ctx.newPage();
   page.on('pageerror', (e) => console.error('[pageerror]', e.message));
 
+  /* Install a detailed layout-shift observer before anything else runs,
+     so we can attribute CLS to specific DOM nodes. */
+  await page.addInitScript(() => {
+    window.__clsEntries = [];
+    try {
+      const po = new PerformanceObserver((list) => {
+        for (const e of list.getEntries()) {
+          if (e.hadRecentInput) continue;
+          const sources = (e.sources || []).map((s) => {
+            const n = s.node;
+            if (!n || n.nodeType !== 1) return { node: null };
+            return {
+              tag: n.tagName,
+              id: n.id || null,
+              class: (n.className && n.className.toString ? n.className.toString().slice(0, 80) : null),
+              prevRect: s.previousRect && { w: Math.round(s.previousRect.width), h: Math.round(s.previousRect.height), t: Math.round(s.previousRect.top) },
+              currRect: s.currentRect && { w: Math.round(s.currentRect.width), h: Math.round(s.currentRect.height), t: Math.round(s.currentRect.top) },
+            };
+          });
+          window.__clsEntries.push({ value: e.value, startTime: e.startTime, sources });
+        }
+      });
+      po.observe({ type: 'layout-shift', buffered: true });
+    } catch (_) {}
+  });
+
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 }).catch(() => {});
   await page.waitForLoadState('load', { timeout: 20000 }).catch(() => {});
   await page.waitForTimeout(2000);
@@ -109,6 +135,19 @@ const url = process.argv[3] || 'https://news.yahoo.co.jp/';
     return out.slice(0, 30);
   });
 
+  /* Dump the top CLS contributors. */
+  const clsEntries = await page.evaluate(() => window.__clsEntries || []);
+  clsEntries.sort((a, b) => b.value - a.value);
+  const totalCls = clsEntries.reduce((s, e) => s + e.value, 0);
+  console.log('=== CLS total:', totalCls.toFixed(4), 'entries:', clsEntries.length, '===');
+  for (const e of clsEntries.slice(0, 10)) {
+    console.log(`  +${e.value.toFixed(4)} @ ${Math.round(e.startTime)}ms`);
+    for (const s of e.sources.slice(0, 3)) {
+      console.log(`    ${s.tag} id=${s.id} class=${s.class} prev=${JSON.stringify(s.prevRect)} curr=${JSON.stringify(s.currRect)}`);
+    }
+  }
+
+  console.log('=== suspects ===');
   console.log(JSON.stringify({ siteId, url, suspects }, null, 2));
   await browser.close();
 })();

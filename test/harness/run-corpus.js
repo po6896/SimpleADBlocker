@@ -243,7 +243,8 @@ async function collectMetrics(page, entry) {
        though the ad is visually gone. Treat that as a WARN, not a FAIL. */
     const cls = (window.__slexCls && typeof window.__slexCls.value === 'number')
       ? window.__slexCls.value : null;
-    return { text, images, scroll, blockedHits, surviveHits, cls };
+    const clsTop = (window.__slexCls && window.__slexCls.entries) || [];
+    return { text, images, scroll, blockedHits, surviveHits, cls, clsTop };
   }, entry);
 }
 
@@ -254,11 +255,36 @@ async function collectMetrics(page, entry) {
  */
 async function installClsObserver(page) {
   await page.addInitScript(() => {
-    window.__slexCls = { value: 0 };
+    window.__slexCls = { value: 0, entries: [] };
     try {
       const po = new PerformanceObserver((list) => {
         for (const e of list.getEntries()) {
-          if (!e.hadRecentInput) window.__slexCls.value += e.value;
+          if (e.hadRecentInput) continue;
+          window.__slexCls.value += e.value;
+          /* Only keep top-10 worst entries by value, with a compact node
+             description so summary.json stays reasonable. */
+          const sources = (e.sources || []).map((s) => {
+            const n = s.node;
+            if (!n || n.nodeType !== 1) return null;
+            return {
+              tag: n.tagName,
+              id: (n.id || '').slice(0, 40),
+              cls: (n.className && n.className.toString ? n.className.toString() : '').slice(0, 80),
+              prev: s.previousRect && {
+                w: Math.round(s.previousRect.width),
+                h: Math.round(s.previousRect.height),
+                t: Math.round(s.previousRect.top),
+              },
+              curr: s.currentRect && {
+                w: Math.round(s.currentRect.width),
+                h: Math.round(s.currentRect.height),
+                t: Math.round(s.currentRect.top),
+              },
+            };
+          }).filter(Boolean);
+          window.__slexCls.entries.push({ v: e.value, t: Math.round(e.startTime), sources });
+          window.__slexCls.entries.sort((a, b) => b.v - a.v);
+          if (window.__slexCls.entries.length > 10) window.__slexCls.entries.length = 10;
         }
       });
       po.observe({ type: 'layout-shift', buffered: true });
@@ -306,13 +332,28 @@ function judge(entry, vanilla, blocked, baseline) {
     }
   }
 
-  /* CLS warning. Not a FAIL — the blocker removing ads necessarily causes
-     some shift — but > 0.1 indicates the replacement is not graceful and
-     empty iframe shells may be visible. */
+  /* CLS warning. Only count shifts whose source looks ad-related; page-level
+     semantic containers (main/article/body/section) shifting is expected when
+     a blocker removes inline ads and the surrounding content reflows, and it
+     drowns out the real signal (empty iframe shells). */
   const warnings = [];
   const CLS_WARN = 0.1;
-  if (typeof blocked.cls === 'number' && blocked.cls > CLS_WARN) {
-    warnings.push(`CLS ${blocked.cls.toFixed(3)} (> ${CLS_WARN}); check empty ad shells`);
+  function isAdLikeSource(src) {
+    const tag = (src.tag || '').toUpperCase();
+    const id = src.id || '';
+    const cls = src.cls || '';
+    if (tag === 'IFRAME' || tag === 'INS') return true;
+    if (/^(ad|ads|yads_|div-gpt-ad|google_ads_|ezoic-)/i.test(id)) return true;
+    if (/(^|\s)(ad|ads|adsbygoogle|advertis)/i.test(cls)) return true;
+    return false;
+  }
+  let adCls = 0;
+  for (const e of (blocked.clsTop || [])) {
+    const adSrc = (e.sources || []).some(isAdLikeSource);
+    if (adSrc) adCls += e.v;
+  }
+  if (adCls > CLS_WARN) {
+    warnings.push(`ad-CLS ${adCls.toFixed(3)} (> ${CLS_WARN}); check empty ad shells`);
   }
 
   /* 3-state verdict: PASS / FAIL / INCONCLUSIVE.
@@ -337,6 +378,11 @@ function judge(entry, vanilla, blocked, baseline) {
  * and bottom-anchored slots fire before we measure.
  */
 async function autoScroll(page, { step = 800, pause = 400, maxSteps = 12 } = {}) {
+  /* Do NOT scroll back to the top at the end — some sites (livedoor_news)
+     have a nav sidebar that mounts only when scrollY = 0, and its late
+     arrival inflates CLS with a page-level shift that is not the blocker's
+     fault. Leaving the final position at the bottom keeps CLS attribution
+     honest. */
   await page.evaluate(async ({ step, pause, maxSteps }) => {
     function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }
     let i = 0;
@@ -349,8 +395,6 @@ async function autoScroll(page, { step = 800, pause = 400, maxSteps = 12 } = {})
       lastY = y;
       i++;
     }
-    window.scrollTo(0, 0);
-    await wait(pause);
   }, { step, pause, maxSteps });
 }
 
