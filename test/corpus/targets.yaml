@@ -1,0 +1,86 @@
+# SimpleADBlocker test corpus.
+#
+# `ads_present`: sites with known ads that the blocker must suppress.
+# `ads_free`:    control group. Blocker must not break these pages.
+#
+# must_be_blocked: CSS selectors that indicate an ad is visible. Any visible
+#                  element matching = FAIL.
+# must_survive:    CSS selectors for essential content. If absent after blocker
+#                  runs = FAIL.
+# body_min_ratio:  after/before ratio thresholds for false-positive detection.
+#                  text=0.7 means post-blocker body text must be >= 70% of vanilla.
+
+defaults:
+  body_min_ratio:
+    text: 0.70
+    images: 0.50
+    scroll: 0.50
+  wait_ms_after_load: 4000
+  wait_ms_after_blocker: 2500
+
+ads_present:
+  - id: yahoo_news_jp
+    url: https://news.yahoo.co.jp/
+    must_be_blocked:
+      - 'iframe[src*="doubleclick.net"]'
+      - 'iframe[src*="googlesyndication"]'
+      - '[id*="AdUnit"]'
+      - '[class*="Advertisement"]'
+    must_survive:
+      - 'a[href*="/articles/"]'
+
+  - id: livedoor_news
+    url: https://news.livedoor.com/
+    must_be_blocked:
+      - 'iframe[src*="doubleclick.net"]'
+      - 'iframe[src*="googlesyndication"]'
+      - '[id^="ad-"]'
+      - '[class*="ldblog_ad"]'
+    must_survive:
+      - 'a[href*="/article/"]'
+
+  - id: hamusoku
+    url: http://hamusoku.com/
+    must_be_blocked:
+      - 'iframe[src*="doubleclick.net"]'
+      - 'iframe[src*="googlesyndication"]'
+      - 'iframe[src*="amazon-adsystem"]'
+      - '[id*="ad"]'
+    must_survive:
+      - 'article, .article, #main'
+
+  - id: itainews
+    url: http://blog.livedoor.jp/dqnplus/
+    must_be_blocked:
+      - 'iframe[src*="doubleclick.net"]'
+      - 'iframe[src*="googlesyndication"]'
+      - '[class*="ad_"]'
+    must_survive:
+      - '.article-body, .article'
+
+  - id: seesaa_sample
+    url: https://weblog.seesaa-blog.jp/
+    must_be_blocked:
+      - 'iframe[src*="doubleclick.net"]'
+      - 'iframe[src*="googlesyndication"]'
+    must_survive:
+      - 'body'
+
+ads_free:
+  - id: mdn_home
+    url: https://developer.mozilla.org/ja/
+    must_survive:
+      - 'main'
+      - 'nav'
+
+  - id: github_readme
+    url: https://github.com/po6896/SimpleADBlocker
+    must_survive:
+      - 'article.markdown-body, [data-testid="readme"]'
+      - 'nav'
+
+  - id: wikipedia_ja
+    url: https://ja.wikipedia.org/wiki/%E5%B9%BF%E5%91%8A
+    must_survive:
+      - '#content, main'
+      - '#firstHeading, h1'

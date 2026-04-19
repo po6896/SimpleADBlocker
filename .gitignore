@@ -1,2 +1,15 @@
 icon.b64
-test/
+node_modules/
+package-lock.json
+
+# Legacy local-only test fixtures (pre-v5.4 harness)
+test/*.html
+test/server.js
+test/fetch-result.js
+test/run-test.js
+test/strip-comments.js
+
+# Generated artifacts
+test/reports/
+test/corpus/har/
+test/manual-checklist.md
