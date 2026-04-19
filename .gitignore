@@ -1,6 +1,5 @@
 icon.b64
 node_modules/
-package-lock.json
 
 # Legacy local-only test fixtures (pre-v5.4 harness)
 test/*.html
@@ -15,3 +14,4 @@ test/corpus/har/
 test/corpus/baseline.json
 test/corpus/candidates.md
 test/manual-checklist.md
+scripts/har-refresh.log

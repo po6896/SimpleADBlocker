@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Daily at 09:00 UTC = 18:00 JST, when JP ad networks are fully active.
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Lint (// comment check)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+      - run: npm run lint
+
+  live-test:
+    name: Live-mode corpus test
+    # Only run live test on schedule or manual dispatch — live network hits
+    # are fragile and do not belong on every push.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Run live-mode corpus
+        run: npm run test:live
+        # Exit code 1 (FAIL) still fails the job; INCONCLUSIVE / ERROR do not.
+      - name: Upload report artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpus-report-${{ github.run_id }}
+          path: test/reports/
+          retention-days: 30
