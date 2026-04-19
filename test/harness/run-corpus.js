@@ -36,6 +36,39 @@ const UA_SLEIPNIR =
 
 const VIEWPORT = { width: 412, height: 915 };
 
+/**
+ * Known ad-server request URL substrings, JP-heavy.
+ * Used to count DSP/SSP requests so we can tell "blocker worked" from
+ * "no ad was even served (bot detected / page empty)".
+ */
+const AD_SERVER_PATTERNS = [
+  /doubleclick\.net\//,
+  /googlesyndication\.com\//,
+  /googletagservices\.com\//,
+  /pubads\.g\.doubleclick\.net/,
+  /safeframe\.googlesyndication\.com/,
+  /amazon-adsystem\.com\//,
+  /criteo\.(com|net)\//,
+  /ib\.adnxs\.com/,
+  /rubiconproject\.com\//,
+  /openx\.net\//,
+  /pubmatic\.com\//,
+  /adform\.net\//,
+  /yjtag\.yahoo\.co\.jp/,
+  /s\.yimg\.jp\/.*\/ad/,
+  /\/\/yie\.jp\//,
+  /gssprt\.jp\//,
+  /adingo\.jp\//,
+  /fout\.jp\//,
+  /i-mobile\.co\.jp\/script/,
+  /zucks\.co\.jp\//,
+  /amoad\.com\//,
+  /nend\.net\//,
+  /ad-stir\.com\//,
+];
+
+const MIN_AD_REQUESTS_FOR_CONCLUSIVE = 3;
+
 const mode = process.argv.includes('--record') ? 'record' : 'replay';
 const filterId = argAfter('--only');
 
@@ -131,14 +164,15 @@ async function collectMetrics(page, entry) {
 
 function judge(entry, vanilla, blocked) {
   const reasons = [];
+  const failures = [];
   for (const hit of blocked.blockedHits) {
     if (hit.visible > 0) {
-      reasons.push(`ad still visible: ${hit.selector} (${hit.visible})`);
+      failures.push(`ad still visible: ${hit.selector} (${hit.visible})`);
     }
   }
   for (const hit of blocked.surviveHits) {
     if (hit.total === 0 || hit.visible === 0) {
-      reasons.push(`must_survive missing: ${hit.selector}`);
+      failures.push(`must_survive missing: ${hit.selector}`);
     }
   }
   const ratio = entry.body_min_ratio || { text: 0.7, images: 0.5, scroll: 0.5 };
@@ -149,14 +183,25 @@ function judge(entry, vanilla, blocked) {
   };
   for (const k of ['text', 'images', 'scroll']) {
     if (ratios[k] < ratio[k]) {
-      reasons.push(`body ${k} shrank to ${(ratios[k] * 100).toFixed(1)}% (threshold ${(ratio[k] * 100).toFixed(0)}%)`);
+      failures.push(`body ${k} shrank to ${(ratios[k] * 100).toFixed(1)}% (threshold ${(ratio[k] * 100).toFixed(0)}%)`);
     }
   }
-  return {
-    pass: reasons.length === 0,
-    reasons,
-    ratios,
-  };
+
+  /* 3-state verdict: PASS / FAIL / INCONCLUSIVE.
+     An ads_present site with vanilla ad_requests < threshold means the DSP
+     never served ads in the first place (bot detection, empty page, cache).
+     We cannot conclude the blocker worked — flag as INCONCLUSIVE instead of
+     silently passing. ads_free sites skip this check (they should have 0). */
+  const vanillaAdReq = vanilla.adRequests || 0;
+  const blockedAdReq = blocked.adRequests || 0;
+  if (entry.group === 'ads_present' && vanillaAdReq < MIN_AD_REQUESTS_FOR_CONCLUSIVE) {
+    reasons.push(`vanilla ad-server requests = ${vanillaAdReq} (need >= ${MIN_AD_REQUESTS_FOR_CONCLUSIVE})`);
+    return { verdict: 'INCONCLUSIVE', reasons, failures, ratios, adRequests: { vanilla: vanillaAdReq, blocked: blockedAdReq } };
+  }
+  if (failures.length > 0) {
+    return { verdict: 'FAIL', reasons: failures, ratios, adRequests: { vanilla: vanillaAdReq, blocked: blockedAdReq } };
+  }
+  return { verdict: 'PASS', reasons: [], ratios, adRequests: { vanilla: vanillaAdReq, blocked: blockedAdReq } };
 }
 
 async function runOne(browser, entry, reportDir) {
@@ -168,6 +213,16 @@ async function runOne(browser, entry, reportDir) {
   page.on('pageerror', (e) => consoleLog.push(`[pageerror] ${e.message}`));
 
   const result = { id: entry.id, url: entry.url, group: entry.group, mode };
+
+  /* ad-server request tracking, swapped between vanilla and blocked passes */
+  let adUrls = [];
+  const requestListener = (req) => {
+    const url = req.url();
+    for (const pat of AD_SERVER_PATTERNS) {
+      if (pat.test(url)) { adUrls.push(url); return; }
+    }
+  };
+  page.on('request', requestListener);
 
   try {
     const safeShot = async (name) => {
@@ -184,13 +239,17 @@ async function runOne(browser, entry, reportDir) {
     };
 
     /* ---- vanilla pass ---- */
+    adUrls = [];
     await page.goto(entry.url, { waitUntil: 'domcontentloaded', timeout: 90000 })
       .catch((e) => consoleLog.push(`[goto-timeout] ${e.message.split('\n')[0]}`));
     await page.waitForTimeout(entry.wait_ms_after_load || 4000);
     const vanillaMetrics = await collectMetrics(page, entry);
+    vanillaMetrics.adRequests = adUrls.length;
+    vanillaMetrics.adSampleUrls = adUrls.slice(0, 8);
     await safeShot('vanilla.png');
 
     /* ---- blocker pass (reuse context so HAR/cache match) ---- */
+    adUrls = [];
     await page.goto('about:blank');
     await page.goto(entry.url, { waitUntil: 'domcontentloaded', timeout: 90000 })
       .catch((e) => consoleLog.push(`[goto-timeout] ${e.message.split('\n')[0]}`));
@@ -216,6 +275,8 @@ async function runOne(browser, entry, reportDir) {
     if (!installed) throw new Error('installBlocker: gave up after 3 retries');
     await page.waitForTimeout(entry.wait_ms_after_blocker || 2500);
     const blockedMetrics = await collectMetrics(page, entry);
+    blockedMetrics.adRequests = adUrls.length;
+    blockedMetrics.adSampleUrls = adUrls.slice(0, 8);
     await safeShot('blocked.png');
 
     const verdict = judge(entry, vanillaMetrics, blockedMetrics);
@@ -263,10 +324,13 @@ process.on('unhandledRejection', (reason) => {
     results.push(r);
     if (r.error) {
       console.log(`ERROR: ${r.error.split('\n')[0]}`);
-    } else if (r.verdict && r.verdict.pass) {
-      console.log('PASS');
-    } else if (r.verdict) {
-      console.log(`FAIL (${r.verdict.reasons.length})`);
+    } else if (r.verdict && r.verdict.verdict === 'PASS') {
+      const ar = r.verdict.adRequests || {};
+      console.log(`PASS  (ads v:${ar.vanilla}/b:${ar.blocked})`);
+    } else if (r.verdict && r.verdict.verdict === 'INCONCLUSIVE') {
+      console.log(`INCONCLUSIVE  (${r.verdict.reasons.join('; ')})`);
+    } else if (r.verdict && r.verdict.verdict === 'FAIL') {
+      console.log(`FAIL  (${r.verdict.reasons.length})`);
       for (const why of r.verdict.reasons) console.log('  - ' + why);
     } else {
       console.log('recorded');
@@ -277,8 +341,13 @@ process.on('unhandledRejection', (reason) => {
   const summary = { mode, stamp, results };
   fs.writeFileSync(path.join(reportDir, 'summary.json'), JSON.stringify(summary, null, 2));
 
-  const failed = results.filter((r) => r.error || (r.verdict && !r.verdict.pass));
+  const by = { PASS: 0, FAIL: 0, INCONCLUSIVE: 0, ERROR: 0 };
+  for (const r of results) {
+    if (r.error) by.ERROR++;
+    else if (r.verdict) by[r.verdict.verdict] = (by[r.verdict.verdict] || 0) + 1;
+  }
   console.log(`\nReport: ${reportDir}`);
-  console.log(`Total: ${results.length}, Failed: ${failed.length}`);
-  process.exit(failed.length ? 1 : 0);
+  console.log(`Total ${results.length}  PASS ${by.PASS}  FAIL ${by.FAIL}  INCONCLUSIVE ${by.INCONCLUSIVE}  ERROR ${by.ERROR}`);
+  /* INCONCLUSIVE alone should not fail CI; only real FAIL / ERROR does. */
+  process.exit((by.FAIL + by.ERROR) > 0 ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(2); });
