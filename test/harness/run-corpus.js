@@ -124,7 +124,10 @@ async function newContext(browser, harPath, harMode, opts = {}) {
         if (pat.test(url)) {
           netBlock.count++;
           if (netBlock.samples.length < 8) netBlock.samples.push(url);
-          return route.abort();
+          /* Use blockedbyclient so requestfailed's errorText is
+             'net::ERR_BLOCKED_BY_CLIENT', mirroring real ad-block behavior
+             and letting us distinguish deliberate aborts from network errors. */
+          return route.abort('blockedbyclient');
         }
       }
       return route.fallback();
@@ -235,12 +238,43 @@ async function runPass(browser, entry, reportDir, passName, passOpts) {
   page.on('console', (m) => consoleLog.push(`[${m.type()}] ${m.text()}`));
   page.on('pageerror', (e) => consoleLog.push(`[pageerror] ${e.message}`));
 
-  const adUrls = [];
+  /* Request lifecycle breakdown for ad-server URLs. The previous single
+     `adRequests` counter fired in `page.on('request')` — which counts a URL
+     even if it is immediately aborted, so "b:8 aborted:8" looked great but
+     hid whether any ad completed. We now separate five outcomes:
+       issued     : matched the pattern and was requested
+       aborted    : our ctx.route abort fired (blocker-layer net block)
+       finished   : response received with any status (survivor candidate)
+       redirected : finished response had 3xx status (not a real survivor)
+       failed     : requestfailed, excluding our own aborts
+     Effective survivors = finished - redirected. Anything else is a stat. */
+  const isAd = (url) => AD_SERVER_PATTERNS.some((p) => p.test(url));
+  const counters = { issued: 0, aborted: 0, finished: 0, redirected: 0, failed: 0 };
+  const sampleUrls = [];
   page.on('request', (req) => {
     const url = req.url();
-    for (const pat of AD_SERVER_PATTERNS) {
-      if (pat.test(url)) { adUrls.push(url); return; }
-    }
+    if (!isAd(url)) return;
+    counters.issued++;
+    if (sampleUrls.length < 8) sampleUrls.push(url);
+  });
+  page.on('requestfinished', async (req) => {
+    if (!isAd(req.url())) return;
+    counters.finished++;
+    try {
+      const res = await req.response();
+      if (res && res.status() >= 300 && res.status() < 400) counters.redirected++;
+    } catch (_) { /* response may be gone on navigation */ }
+  });
+  page.on('requestfailed', (req) => {
+    if (!isAd(req.url())) return;
+    const failure = req.failure();
+    const txt = (failure && failure.errorText) || '';
+    /* BLOCKED_BY_CLIENT = our own network route abort.
+       ABORTED = navigation-canceled in-flight request (cookie-sync etc.).
+       Anything else = real network failure worth flagging. */
+    if (/BLOCKED_BY_CLIENT/i.test(txt)) counters.aborted++;
+    else if (/ABORTED/i.test(txt)) counters.aborted++;
+    else counters.failed++;
   });
 
   let metrics, shotErr;
@@ -275,8 +309,10 @@ async function runPass(browser, entry, reportDir, passName, passOpts) {
     await page.waitForTimeout(postWait);
 
     metrics = await collectMetrics(page, entry);
-    metrics.adRequests = adUrls.length;
-    metrics.adSampleUrls = adUrls.slice(0, 8);
+    metrics.ads = { ...counters };
+    metrics.adRequests = counters.issued; /* legacy field for judge() */
+    metrics.adSurvivors = counters.finished - counters.redirected;
+    metrics.adSampleUrls = sampleUrls;
     metrics.networkBlocked = ctx.__netBlock ? ctx.__netBlock.count : 0;
     metrics.networkBlockedSamples = ctx.__netBlock ? ctx.__netBlock.samples : [];
 
@@ -361,9 +397,15 @@ process.on('unhandledRejection', (reason) => {
     if (r.error) {
       console.log(`ERROR: ${r.error.split('\n')[0]}`);
     } else if (r.verdict && r.verdict.verdict === 'PASS') {
-      const ar = r.verdict.adRequests || {};
-      const nb = (r.blocked && r.blocked.networkBlocked) || 0;
-      console.log(`PASS  (ads v:${ar.vanilla}/b:${ar.blocked}, net-blocked:${nb})`);
+      const v = (r.vanilla && r.vanilla.ads) || {};
+      const b = (r.blocked && r.blocked.ads) || {};
+      const vSurv = (r.vanilla && r.vanilla.adSurvivors) || 0;
+      const bSurv = (r.blocked && r.blocked.adSurvivors) || 0;
+      console.log(
+        `PASS  vanilla{iss:${v.issued||0} fin:${v.finished||0} red:${v.redirected||0} fail:${v.failed||0}} ` +
+        `blocked{iss:${b.issued||0} abt:${b.aborted||0} fin:${b.finished||0} red:${b.redirected||0} fail:${b.failed||0}} ` +
+        `survivors v:${vSurv}->b:${bSurv}`
+      );
     } else if (r.verdict && r.verdict.verdict === 'INCONCLUSIVE') {
       console.log(`INCONCLUSIVE  (${r.verdict.reasons.join('; ')})`);
     } else if (r.verdict && r.verdict.verdict === 'FAIL') {
