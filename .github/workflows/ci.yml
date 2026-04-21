@@ -15,8 +15,8 @@ jobs:
     name: Lint (// comment check)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
       - run: npm ci --no-audit --no-fund
@@ -30,8 +30,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
       - run: npm ci --no-audit --no-fund
@@ -42,7 +42,7 @@ jobs:
         # Exit code 1 (FAIL) still fails the job; INCONCLUSIVE / ERROR do not.
       - name: Upload report artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: corpus-report-${{ github.run_id }}
           path: test/reports/

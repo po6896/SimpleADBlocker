@@ -18,6 +18,13 @@ defaults:
 ads_present:
   - id: yahoo_news_jp
     url: https://news.yahoo.co.jp/
+    # Flaky near default threshold (例: run 24719451932 で text 67.9% vs 70%、
+    # scroll 43.1% vs 50%)。Yahoo ニュースは時間帯でカルーセル広告量が変動、
+    # must_survive article link は安定して残るため微緩和。
+    body_min_ratio:
+      text: 0.60
+      images: 0.45
+      scroll: 0.40
     must_be_blocked:
       - 'iframe[src*="doubleclick.net"]'
       - 'iframe[src*="googlesyndication"]'
