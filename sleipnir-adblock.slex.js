@@ -1102,7 +1102,14 @@
     '4gamer.net': ['.ad_top', '.ad_container', '.banner_left_4g', '.satellite_banner'],
     'jbbs.shitaraba.net': ['iframe[id^="ox_"]', '.ad-320_50', '#recommend_ad'],
     'rakuten.co.jp': ['#ad'],
-    'travel.rakuten.co.jp': ['#ad']
+    'travel.rakuten.co.jp': ['#ad'],
+    /* Advanced Ads sticky widget が空殻化して画面追従でタップ妨害する対策。
+       サブドメイン (overwatch2-news.* 等) にも matchDomain suffix-match で適用。 */
+    'apexlegends-leaksnews.com': ['.ai-sticky-widget', '#ai_widget-2', '.ai-viewport-1'],
+    /* GliaCloud outstream video (AI 生成・スクロール連動自動再生・音声付き) の
+       注入先 container を hide。script は実行されても container 無しで静かに失敗。
+       i-mobile interstitial (#im-xxx) も同時対応。 */
+    'hero-news.com': ['.gliaplayer-container', '[id^="im-"]']
   };
 
   var AFFILIATE_CSS = [
