@@ -303,6 +303,18 @@ async function runPass(browser, entry, reportDir, passName, passOpts) {
     } catch (e) {
       consoleLog.push(`[screenshot-skipped:${passName}.png] ${e.message}`);
     }
+
+    /* #3 HTML snapshot: 失敗時の要素特定を高速化。SecurityError や
+       layout 破綻の調査に screenshot より情報量が多い。 */
+    try {
+      const html = await page.content();
+      fs.writeFileSync(
+        path.join(reportDir, entry.id, `${passName}.html`),
+        html
+      );
+    } catch (e) {
+      consoleLog.push(`[html-snapshot-skipped:${passName}.html] ${e.message}`);
+    }
   } finally {
     fs.appendFileSync(
       path.join(reportDir, entry.id, 'console.log'),

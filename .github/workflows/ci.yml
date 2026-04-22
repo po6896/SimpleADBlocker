@@ -35,7 +35,17 @@ jobs:
         with:
           node-version: '22'
       - run: npm ci --no-audit --no-fund
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
       - name: Install Chromium for Playwright
+        # hit 時は browser バイナリはキャッシュから取るが --with-deps で
+        # システム依存 (apt libs) は毎回 install する必要がある。
         run: npx playwright install --with-deps chromium
       - name: Run live-mode corpus
         run: npm run test:live
@@ -48,3 +58,14 @@ jobs:
           name: corpus-report-${{ github.run_id }}
           path: test/reports/
           retention-days: 30
+      - name: Notify Discord on scheduled failure
+        # schedule run で失敗した場合のみ通知 (dispatch 実験では鳴らさない)。
+        # DISCORD_WEBHOOK_URL secret 未設定ならスキップ。
+        if: failure() && github.event_name == 'schedule' && env.DISCORD_WEBHOOK_URL != ''
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          run_url="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          curl -sS -H "Content-Type: application/json" \
+            -d "{\"content\":\":rotating_light: SimpleADBlocker CI schedule failure\n${run_url}\"}" \
+            "$DISCORD_WEBHOOK_URL" || true
