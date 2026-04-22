@@ -58,14 +58,3 @@ jobs:
           name: corpus-report-${{ github.run_id }}
           path: test/reports/
           retention-days: 30
-      - name: Notify Discord on scheduled failure
-        # schedule run で失敗した場合のみ通知 (dispatch 実験では鳴らさない)。
-        # DISCORD_WEBHOOK_URL secret 未設定ならスキップ。
-        if: failure() && github.event_name == 'schedule' && env.DISCORD_WEBHOOK_URL != ''
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        run: |
-          run_url="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          curl -sS -H "Content-Type: application/json" \
-            -d "{\"content\":\":rotating_light: SimpleADBlocker CI schedule failure\n${run_url}\"}" \
-            "$DISCORD_WEBHOOK_URL" || true
