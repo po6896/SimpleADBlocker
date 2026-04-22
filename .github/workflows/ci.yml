@@ -39,7 +39,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run live-mode corpus
         run: npm run test:live
-        # Exit code 1 (FAIL) still fails the job; INCONCLUSIVE / ERROR do not.
+        # Exit code 1 if FAIL or ERROR count > 0 (run-corpus.js L426);
+        # INCONCLUSIVE alone passes. ERROR 通常は page.evaluate / network 例外。
       - name: Upload report artifacts
         if: always()
         uses: actions/upload-artifact@v5

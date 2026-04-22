@@ -52,7 +52,7 @@ ads_present:
   # Swapped from ameblo (thin home + crashing article URL) to fc2 blog —
   # fc2 runs i-mobile / Yahoo ads heavily. Article pulled from Brave history.
   - id: fc2blog_article
-    url: http://nlst3.blog.fc2.com/blog-entry-2222.html
+    url: https://nlst3.blog.fc2.com/blog-entry-2222.html
     must_be_blocked:
       - 'iframe[src*="doubleclick.net"]'
       - 'iframe[src*="googlesyndication"]'
