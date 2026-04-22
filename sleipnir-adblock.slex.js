@@ -778,18 +778,24 @@
   }
 
   function removeTrackingCookies() {
-    var trackingPatterns = /^(_ga|_gid|_gat|_gat_|__utm|_gcl|_gl|FPLC|FPID|_fbp|_fbc|_fbq|fr|datr|sb|wd|IDE|DSID|MUID|_uetsid|_uetvid|ANONCHK|NID|1P_JAR|__gads|__gpi|__gfp_64b|_rdt_uuid|_pin_unauth|_tt_enable_cookie|_ttp|mp_|_hp2_|_hj|_clck|_clsk|ajs_|_mkto_trk|hubspotutk|__hssc|__hssrc|__hstc|_omappvp|_omappvs|OptanonConsent|li_sugr|bcookie|AnalyticsSyncHistory|UserMatchHistory)/;
-    var cookies = document.cookie.split(';');
-    for (var i = 0; i < cookies.length; i++) {
-      var pos = cookies[i].indexOf('=');
-      if (pos === -1) continue;
-      var name = cookies[i].substring(0, pos).trim();
-      if (trackingPatterns.test(name)) {
-        var expire = '=; Max-Age=-1; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-        document.cookie = name + expire + '; path=/';
-        document.cookie = name + expire + '; path=/; domain=.' + hostname;
+    /* document.cookie へのアクセスは sandbox / opaque origin / data-url 等で
+       SecurityError を投げることがある (観測例: fc2 ブログ記事の広告 iframe
+       相当の context で Playwright 経由アクセス時)。全体を try/catch で防御し、
+       失敗時は静かに諦める。 */
+    try {
+      var trackingPatterns = /^(_ga|_gid|_gat|_gat_|__utm|_gcl|_gl|FPLC|FPID|_fbp|_fbc|_fbq|fr|datr|sb|wd|IDE|DSID|MUID|_uetsid|_uetvid|ANONCHK|NID|1P_JAR|__gads|__gpi|__gfp_64b|_rdt_uuid|_pin_unauth|_tt_enable_cookie|_ttp|mp_|_hp2_|_hj|_clck|_clsk|ajs_|_mkto_trk|hubspotutk|__hssc|__hssrc|__hstc|_omappvp|_omappvs|OptanonConsent|li_sugr|bcookie|AnalyticsSyncHistory|UserMatchHistory)/;
+      var cookies = document.cookie.split(';');
+      for (var i = 0; i < cookies.length; i++) {
+        var pos = cookies[i].indexOf('=');
+        if (pos === -1) continue;
+        var name = cookies[i].substring(0, pos).trim();
+        if (trackingPatterns.test(name)) {
+          var expire = '=; Max-Age=-1; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+          try { document.cookie = name + expire + '; path=/'; } catch (e1) {}
+          try { document.cookie = name + expire + '; path=/; domain=.' + hostname; } catch (e2) {}
+        }
       }
-    }
+    } catch (e) {}
   }
 
   var CSS_RULES = [
