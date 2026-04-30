@@ -62,6 +62,19 @@ const workers = parseInt(argAfter('--workers') || (mode === 'record' ? '1' : '4'
 
 function ensureDir(p) { fs.mkdirSync(p, { recursive: true }); }
 
+/* Wrap a promise with a timeout. Anti-adblock sites (e.g. kamigame_dbd)
+   can wedge page.evaluate after slex inject — the call never returns
+   even though the page itself is responsive. Ctx.close() also stalls
+   while flushing HAR for heavy bid traffic. Without these guards a
+   single bad pass would hang the whole run-corpus job indefinitely. */
+function withTimeout(promise, ms, label) {
+  let timer;
+  const t = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} timeout after ${ms}ms`)), ms);
+  });
+  return Promise.race([promise, t]).finally(() => clearTimeout(timer));
+}
+
 function loadCorpus() {
   const doc = yaml.load(fs.readFileSync(CORPUS_PATH, 'utf-8'));
   const defaults = doc.defaults || {};
@@ -141,7 +154,7 @@ async function newContext(browser, harPath, harMode, opts = {}) {
  * inflating CLS with a false-positive page-level shift.
  */
 async function autoScroll(page, { step = 800, pause = 400, maxSteps = 12 } = {}) {
-  await page.evaluate(async ({ step, pause, maxSteps }) => {
+  await withTimeout(page.evaluate(async ({ step, pause, maxSteps }) => {
     function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }
     let lastY = -1;
     for (let i = 0; i < maxSteps; i++) {
@@ -150,7 +163,7 @@ async function autoScroll(page, { step = 800, pause = 400, maxSteps = 12 } = {})
       if (window.scrollY === lastY) break;
       lastY = window.scrollY;
     }
-  }, { step, pause, maxSteps });
+  }, { step, pause, maxSteps }), 15000, 'autoScroll');
 }
 
 async function installClsObserver(page) {
@@ -191,7 +204,7 @@ async function installClsObserver(page) {
 }
 
 async function collectMetrics(page, entry) {
-  return await page.evaluate((ent) => {
+  return await withTimeout(page.evaluate((ent) => {
     function visible(el) {
       if (!el) return false;
       const r = el.getBoundingClientRect();
@@ -218,7 +231,7 @@ async function collectMetrics(page, entry) {
       ? window.__slexCls.value : null;
     const clsTop = (window.__slexCls && window.__slexCls.entries) || [];
     return { text, images, scroll, blockedHits, surviveHits, cls, clsTop };
-  }, entry);
+  }, entry), 15000, 'collectMetrics');
 }
 
 /* ---------- single-pass execution ---------- */
@@ -307,7 +320,7 @@ async function runPass(browser, entry, reportDir, passName, passOpts) {
     /* #3 HTML snapshot: 失敗時の要素特定を高速化。SecurityError や
        layout 破綻の調査に screenshot より情報量が多い。 */
     try {
-      const html = await page.content();
+      const html = await withTimeout(page.content(), 10000, 'page.content');
       fs.writeFileSync(
         path.join(reportDir, entry.id, `${passName}.html`),
         html
@@ -320,7 +333,14 @@ async function runPass(browser, entry, reportDir, passName, passOpts) {
       path.join(reportDir, entry.id, 'console.log'),
       `\n==== ${passName} ====\n` + consoleLog.join('\n') + '\n'
     );
-    await ctx.close();
+    /* HAR flush on close can stall on heavy bid traffic; cap at 30s
+       so a single hung pass doesn't wedge the entire corpus run. */
+    await withTimeout(ctx.close(), 30000, 'ctx.close').catch((e) => {
+      fs.appendFileSync(
+        path.join(reportDir, entry.id, 'console.log'),
+        `[ctx.close] ${e.message}\n`
+      );
+    });
   }
   return { metrics };
 }

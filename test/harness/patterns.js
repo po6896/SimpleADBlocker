@@ -8,10 +8,11 @@
  * perspective an unblocked creative fetch is still an ad load.
  *
  * JP-heavy coverage: Geniee, Fluct/adingo, i-mobile, Zucks, AMoAd, Nend,
- * Adstir, MicroAd, Yahoo Yads.
+ * Adstir, MicroAd, Yahoo Yads, Intimate Merger, Cxense, Browsi, D2C,
+ * SoCDM, Aman/TrueData, DC Tag, Nakanohito.
  */
 const AD_SERVER_PATTERNS = [
-  /* tier 1 */
+  /* tier 1 — Google / Amazon / classic SSP */
   /doubleclick\.net\//,
   /googlesyndication\.com\//,
   /googletagservices\.com\//,
@@ -20,6 +21,10 @@ const AD_SERVER_PATTERNS = [
   /safeframe\.googlesyndication\.com/,
   /pagead2\.googlesyndication\.com/,
   /adservice\.google\.(com|co\.jp)/,
+  /fundingchoicesmessages\.google\.com/,
+  /adtrafficquality\.google/,
+  /google-analytics\.com\//,
+  /analytics\.google\.com\//,
   /amazon-adsystem\.com\//,
   /criteo\.(com|net)\//,
   /ib\.adnxs\.com/,
@@ -29,25 +34,55 @@ const AD_SERVER_PATTERNS = [
   /adform\.net\//,
   /taboola\.com\//,
   /outbrain\.com\//,
+
+  /* tier 1 — Yahoo JP */
   /yjtag\.yahoo\.co\.jp/,
   /s\.yimg\.jp\/.*\/ad/,
   /yads\.yahoo\.co\.jp/,
+  /clb\.yahoo\.co\.jp/,
+  /dsb\.yahoo\.co\.jp/,
   /\/\/yie\.jp\//,
+
+  /* tier 1 — JP SSP / DMP */
   /gssprt\.jp\//,
+  /cpt\.geniee\.jp/,
   /adingo\.jp\//,
   /fout\.jp\//,
   /i-mobile\.co\.jp\/(script|banner|ad)/,
-  /zucks\.co\.jp\//,
+  /zucks\.(co\.jp|net)\//,
   /amoad\.com\//,
   /nend\.net\//,
   /ad-stir\.com\//,
   /microad\.jp\//,
   /impact-ad\.jp\//,
+  /im-apps\.net\//,
+  /cxense\.com\//,
+  /nakanohito\.jp\//,
+  /amanad\.adtdp\.com\//,
+  /socdm\.com\//,
+  /ladsp\.com\//,
+  /dc-tag\.jp\//,
+  /hera\.d2c\.ne\.jp\//,
+  /webpush\.jp\//,
+
+  /* tier 1 — global SSP / DSP / cookie sync */
+  /id5-sync\.com\//,
+  /browsiprod\.com\//,
+  /match\.adsrvr\.org\//,
+  /tapad\.com\//,
+  /lijit\.com\//,
+  /s-onetag\.com\//,
+  /ad-delivery\.net\//,
+  /ads-twitter\.com\//,
+  /analytics\.twitter\.com\//,
+  /connect\.facebook\.net\//,
+
+  /* tier 1 — viewability / brand safety */
   /adsafeprotected\.com\//,
   /moatads\.com\//,
   /scorecardresearch\.com\//,
 
-  /* tier 2 */
+  /* tier 2 — creative CDN */
   /tpc\.googlesyndication\.com/,
   /static\.criteo\.(com|net)/,
   /images\.criteo\.(com|net)/,
@@ -58,6 +93,7 @@ const AD_SERVER_PATTERNS = [
   /img\.ak\.impact-ad\.jp/,
   /img\.i-mobile\.co\.jp/,
   /cdn\.adingo\.jp/,
+  /cdn\.id5-sync\.com/,
 ];
 
 function isAdUrl(url) {
