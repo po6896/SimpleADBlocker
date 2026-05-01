@@ -286,9 +286,59 @@ const AD_SERVER_PATTERNS = [
   /d\.line-scdn\.net\/n\/line_tag/,       /* LINE Tag CDN (path) */
   /\/\/c360a\.salesforce\.com\//,         /* Salesforce CDP */
   /adsdkprod\.azureedge\.net\//,          /* CA viewability SDK */
-  /edayo\.miyuki-web\.net\//,             /* edayo */
+  /miyuki-web\.net\//,                    /* miyuki-web (was: edayo only) */
   /ssp-sync\.i-mobile\.co\.jp\//,         /* i-mobile sync */
   /www\.temu\.com\/api\/x/,               /* Temu /api/x pixel */
+
+  /* 2026-05-01 audit (round 5): live scan extended to 30 sites — added
+     IT/gaming/lifestyle/job/matome categories. Surfaced GAM/AAM long tail. */
+  /* — Path-based — */
+  /www\.google\.com\/ccm\//,              /* Google Conversion Manager */
+  /www\.google\.co\.jp\/ads\/ga-audiences/, /* Google Ads audience */
+  /csi\.gstatic\.com\/csi/,               /* Google CSI */
+  /yandex\.ru\/an\/mapuid/,               /* Yandex ad mapuid */
+  /\/\/odr\.mookie1\.com\//,              /* Xandr Mookie */
+  /a9\.amazon\.dev\/csm\//,               /* Amazon adsq tungsten */
+  /\.tq-tungsten\.com\//,                 /* Amazon Tungsten 2nd */
+
+  /* — DSP / SSP / cookie-sync (suffix) — */
+  /3lift\.com\//,                         /* TripleLift */
+  /presage\.io\//,                        /* Presage */
+  /1rx\.io\//,                            /* Rhythmone */
+  /demdex\.net\//,                        /* Adobe Audience Manager */
+  /bidr\.io\//,                           /* RTBHouse Beeswax */
+  /stackadapt\.com\//,                    /* StackAdapt */
+  /uncn\.jp\//,                           /* UNICOIN DMP */
+  /admatic\.de\//,                        /* AdMatic.de */
+  /seedtag\.com\//,                       /* Seedtag */
+  /clvrads\.com\//,                       /* clvrads */
+  /nextmillmedia\.com\//,                 /* Next Millennium */
+  /onetag-sys\.com\//,                    /* OneTag SYS */
+  /sp-gn\.com\//,                         /* SP-GN */
+  /servenobid\.com\//,                    /* ServeNobid */
+  /cootlogix\.com\//,                     /* Cootlogix */
+  /bfmio\.com\//,                         /* Beachfront */
+  /ingage\.tech\//,                       /* Ingage */
+  /nr-data\.net\//,                       /* New Relic Browser */
+  /aiasahi\.jp\//,                        /* Asahi advertising */
+  /adobedtm\.com\//,                      /* Adobe DTM */
+  /omtrdc\.net\//,                        /* Adobe Marketing Cloud */
+  /clmbtech\.com\//,                      /* Columbus */
+  /aralego\.com\//,                       /* Aralego */
+  /presco\.asia\//,                       /* Presco */
+  /company-target\.com\//,                /* Company Target */
+  /tiktokw\.us\//,                        /* TikTok analytics */
+  /brand-display\.com\//,                 /* Brand Display DMP */
+  /adotmob\.com\//,                       /* Adotmob */
+  /cnobi\.jp\//,                          /* cnobi */
+  /seenthis\.se\//,                       /* Seenthis */
+  /onesignal\.com\//,                     /* OneSignal push */
+  /nowads\.com\//,                        /* nowads */
+  /adsboosters\.xyz\//,                   /* adsboosters */
+  /zimg\.jp\//,                           /* Zucks image CDN */
+  /cloudflareinsights\.com\//,            /* CF Web Analytics */
+  /connectid\.analytics\.yahoo\.com\//,   /* Yahoo ConnectID */
+  /rfihub\.com\//,                        /* Rocket Fuel */
 ];
 
 function isAdUrl(url) {

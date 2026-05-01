@@ -57,6 +57,21 @@ const TARGETS = [
   { id: 'diamond', url: 'https://diamond.jp/' },
   { id: 'nlab_itmedia', url: 'https://nlab.itmedia.co.jp/' },
   { id: 'yaraon', url: 'http://yaraon-blog.com/' },
+  /* round 5 — IT / gaming / lifestyle / job / matome */
+  { id: 'gigazine', url: 'https://gigazine.net/' },
+  { id: 'impress_pc', url: 'https://pc.watch.impress.co.jp/' },
+  { id: 'impress_akiba', url: 'https://akiba-pc.watch.impress.co.jp/' },
+  { id: 'famitsu', url: 'https://www.famitsu.com/' },
+  { id: 'dengeki', url: 'https://dengekionline.com/' },
+  { id: 'cookpad', url: 'https://cookpad.com/' },
+  { id: 'tenki', url: 'https://tenki.jp/' },
+  { id: 'tabelog', url: 'https://tabelog.com/' },
+  { id: 'mynavi', url: 'https://news.mynavi.jp/' },
+  { id: 'doda', url: 'https://doda.jp/' },
+  { id: 'zdnet_jp', url: 'https://japan.zdnet.com/' },
+  { id: 'hatima', url: 'http://hatima.jp/' },
+  { id: 'esuteru', url: 'http://blog.esuteru.com/' },
+  { id: 'nico_news', url: 'https://www.nicovideo.jp/news/' },
 ];
 
 const UA_SLEIPNIR = 'Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 ' +
