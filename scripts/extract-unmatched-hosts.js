@@ -72,10 +72,11 @@ const corpusActive = [
   'wikiwiki_nijisanji', 'kamikouryaku_nightreign', 'itmedia_news',
   'mdn_home', 'github_readme', 'wikipedia_ja',
 ];
+const includeAll = process.argv.includes('--all');
 
 for (const f of harFiles) {
   const id = f.replace(/\.har$/, '');
-  if (!corpusActive.includes(id)) continue; // skip obsolete HARs
+  if (!includeAll && !corpusActive.includes(id)) continue;
   const har = JSON.parse(fs.readFileSync(path.join(HAR_DIR, f), 'utf8'));
   const entries = har.log?.entries || [];
   for (const e of entries) {

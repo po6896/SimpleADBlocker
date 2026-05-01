@@ -105,6 +105,20 @@ const AD_SERVER_PATTERNS = [
   /www\.facebook\.com\/privacy_sandbox\/pixel/, /* FB Privacy Sandbox conv */
   /cdn\.jsdelivr\.net\/gh\/prebid/,       /* Prebid.js currency-file */
   /transcend-cdn\.com/,                   /* CMP — count only, not blocked */
+
+  /* 2026-05-01 audit (round 2): 廃止 HAR + 旧 corpus からの拾い直し */
+  /admatrix\.jp\//,                       /* PolymorphicAds DSP (4gamer 専属) */
+  /polymorphicads\.jp\//,                 /* PolymorphicAds CDN */
+  /stat\.amebame\.com\/pub\/ads/,         /* Ameba ads serving */
+  /meas\.ad\.pr\.ameba\.jp\//,            /* Ameba PR measurement */
+  /4dex\.io\//,                           /* Prebid Analytics */
+  /ups\.analytics\.yahoo\.com/,           /* Yahoo Unified Profile Sync */
+  /sy\.ameblo\.jp\/sync/,                 /* Ameblo cookie sync */
+  /semasio\.net\//,                       /* Semasio DMP */
+  /a-mo\.net\//,                          /* AMobee SSP */
+  /nexx360\.io\//,                        /* Nexx360 SSP */
+  /cdn\.jsdelivr\.net\/npm\/prebid/,      /* Prebid universal-creative */
+  /www\.temu\.com\/api\/adx/,             /* Temu adx pixel (path-limited) */
 ];
 
 function isAdUrl(url) {
