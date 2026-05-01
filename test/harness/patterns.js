@@ -409,6 +409,59 @@ const AD_SERVER_PATTERNS = [
   /showcase-tv\.jp\//,                    /* Showcase Adv */
   /microadinc\.com\//,                    /* MicroAd US */
   /zucks\.jp\//,                          /* Zucks .jp TLD */
+
+  /* 2026-05-01 audit (round 7): EasyList cross-check + adult + mobile SDK. */
+  /* — EasyList established vendors — */
+  /popads\.net\//,                        /* PopAds */
+  /popcash\.net\//,                       /* PopCash */
+  /popunder\.(bid|ru)\//,                 /* Popunder */
+  /getpopunder\.com\//, /mypopads\.com\//, /* Popunder networks */
+  /revcontent\.com\//,                    /* RevContent */
+  /tribalfusion\.com\//,                  /* TribalFusion (Exponential) */
+  /sociomantic\.com\//,                   /* Sociomantic (Criteo subsidiary) */
+  /videoplaza\.tv\//,                     /* VideoPlaza (Ooyala) */
+  /spotxchange\.com\//,                   /* SpotX */
+  /serverbid\.com\//,                     /* ServerBid */
+  /stickyadstv\.com\//,                   /* StickyADS.tv (FreeWheel) */
+  /htlbid\.com\//,                        /* HtlBid */
+  /kueezrtb\.com\//,                      /* Kueez */
+  /metrica-yandex\.com\//,                /* Yandex Metrica */
+  /cdn-adtech\.com\//,                    /* AdTech */
+  /tradeadexchange\.com\//,               /* TradeAdExchange */
+  /uidsync\.net\//,                       /* UID Sync */
+  /web\.adblade\.com\//,                  /* AdBlade */
+  /genieedmp\.com\//, /genieessp\.com\//, /* Geniee global */
+  /adscale\.de\//,                        /* AdScale */
+  /adnxs(?:\.net|1\.com|-simple\.com)\//, /* Xandr sisters */
+  /googleadservices-cn\.com\//,           /* Google Ads CN */
+  /propellerads\.tech\//,                 /* PropellerAds tech */
+  /safesync\.com\//,                      /* SafeSync */
+  /m-rtb\.com\//,                         /* m-RTB */
+
+  /* — Adult ad networks — */
+  /trafficjunky\.net\//,                  /* TrafficJunky (Pornhub) */
+  /ero-advertising\.com\//,               /* Ero-Advertising */
+  /adultadvertising\.net\//,              /* AdultAdvertising */
+
+  /* — Mobile ad SDKs (also fire from in-app WebView) — */
+  /applovin\.com\//,                      /* AppLovin */
+  /applvn\.com\//,                        /* AppLovin short */
+  /unityads\.unity3d\.com\//,             /* Unity Ads */
+  /\/\/unityads\.com\//,                  /* Unity Ads alt */
+  /ironsrc\.com\//,                       /* IronSource */
+  /ironsrc\.mobi\//,                      /* IronSource mobile */
+  /vungle\.com\//,                        /* Vungle */
+  /chartboost\.com\//,                    /* Chartboost */
+  /tapjoy\.com\//,                        /* Tapjoy */
+  /tapjoyads\.com\//,                     /* Tapjoy ads */
+  /mintegral\.com\//,                     /* Mintegral */
+  /liftoff\.io\//,                        /* Liftoff */
+  /pangle\.io\//,                         /* Pangle (Bytedance) */
+  /adgatemedia\.com\//,                   /* AdGate Media */
+  /fyber\.com\//,                         /* Fyber */
+  /inner-active\.mobi\//,                 /* Fyber Inneractive */
+  /flurry\.com\//,                        /* Flurry */
+  /startapp\.com\//,                      /* StartApp */
 ];
 
 function isAdUrl(url) {
