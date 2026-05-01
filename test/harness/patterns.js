@@ -94,6 +94,17 @@ const AD_SERVER_PATTERNS = [
   /img\.i-mobile\.co\.jp/,
   /cdn\.adingo\.jp/,
   /cdn\.id5-sync\.com/,
+
+  /* 2026-05-01 audit: corpus HAR で既存リストから漏れた広告ホスト */
+  /yads\.c\.yimg\.jp/,                    /* Yahoo yads-async.js CDN */
+  /casalemedia\.com\//,                   /* Index Exchange SSP */
+  /bidswitch\.net\//,                     /* BidSwitch cookie-sync */
+  /flux-cdn\.com\//,                      /* GeoEdge ad-quality */
+  /rumcdn\.geoedge\.be\//,                /* GeoEdge ad-quality */
+  /\/\/t\.co\/i\/adsct/,                  /* Twitter ad conversion pixel */
+  /www\.facebook\.com\/privacy_sandbox\/pixel/, /* FB Privacy Sandbox conv */
+  /cdn\.jsdelivr\.net\/gh\/prebid/,       /* Prebid.js currency-file */
+  /transcend-cdn\.com/,                   /* CMP — count only, not blocked */
 ];
 
 function isAdUrl(url) {
