@@ -9,7 +9,8 @@
 // @icon            data:image/png;base64,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
 // @include         http://*
 // @include         https://*
-// @version         5.5.0
+// @version         5.5.1
+// @history         5.5.1 Round-6 audit — live scan 30→40 + ABP-JP cross-check; add 60+ rules incl. Google rmkt/pagead, Recruit ad network, media-publisher SDs.
 // @history         5.5.0 Round-5 audit — live scan extended to 30 sites; add 50+ rules incl. Google CCM, Adobe AAM/DTM/MC, 3lift, Presage, StackAdapt, OneSignal, Yandex.
 // @history         5.4.5 Round-4 audit — live scan extended to 16 sites; add 70+ SSP/DSP/DMP rules.
 // @history         5.4.4 Round-3 audit — live scan of 6 ad-heavy JP sites; add 80+ SSP/DSP/DMP rules.
@@ -19,6 +20,7 @@
 // @history         5.4.0 Kill empty ad shells and IAB-sized wrappers to fix CLS.
 // @history         5.3.2 Add @icon metadata for gallery upload.
 // @history         4.8.1 Initial gallery release.
+// @history:ja      5.5.1 第6弾監査(30→40サイト+ABP-JP統合)で60+ルール追加。Google rmkt/pagead、Recruit ad、メディア専属広告SD多数。
 // @history:ja      5.5.0 第5弾監査(30サイト拡張)で50+ルール追加。Google CCM、Adobe AAM/DTM/MC、3lift、Presage、StackAdapt、OneSignal、Yandex 等。
 // @history:ja      5.4.5 第4弾監査(16サイトliveスキャン拡張)でSSP/DSP/DMP 70+ルール追加。
 // @history:ja      5.4.4 第3弾監査(JP広告6サイトliveスキャン)でSSP/DSP/DMP 80+ルール追加。
@@ -165,7 +167,7 @@
     'im-apps.net', 'dmp.im-apps.net', 'sync.im-apps.net',
     'cxense.com', 'api.cxense.com', 'comcluster.cxense.com',
     'nakanohito.jp', 'bs.nakanohito.jp',
-    'amanad.adtdp.com', 'ad.as.amanad.adtdp.com',
+    'adtdp.com',
     'socdm.com', 'd.socdm.com',
     'ladsp.com', 'pb.ladsp.com',
     'dc-tag.jp', 's.dc-tag.jp', 't.dc-tag.jp',
@@ -296,7 +298,41 @@
     'csi.gstatic.com/csi',
     'yandex.ru/an/mapuid',
     'odr.mookie1.com',
-    'a9.amazon.dev/csm'
+    'a9.amazon.dev/csm',
+
+    /* 2026-05-01 audit (round 6): live scan 30→40 sites + ABP-JP cross-check */
+    /* DSP/SSP live-scan additions */
+    'r-ad.ne.jp', 'r-adimg.com', 'iqm.com', 'flvcdn.net', 'seseasky.com',
+    'rtbsystem.com', 'adentifi.com', 'kargo.com', 'loudecho.ai',
+    'adroll.com', 'monetize-ssp.com', 'adlion.jp', 'slim01.jp',
+    'robee.tech', 'marketo.net', 'contentsquare.net', 'advortex.cloud',
+    'cms.analytics.yahoo.com',
+    /* path-based (round 6) */
+    'www.google.com/rmkt/collect',
+    'www.google.co.jp/pagead/1p-user-list',
+    'xmtrading.com/affiliate_tracking',
+    'paa-reporting-advertising.amazon',
+    /* ABP-JP cross-check: media-publisher own ad SDs */
+    'ad.ameba.jp', 'ad.goo.ne.jp', 'ad.hatena.ne.jp',
+    'ad.mainichi.jp', 'an.mainichi.jp',
+    'ad.ntv.co.jp', 'ad.response.jp',
+    'ad.watch.impress.co.jp', 'ngs.impress.co.jp',
+    'adcl.sankei.co.jp', 'bizad.nikkeibp.co.jp', 'b.gnavi.co.jp',
+    'imp.allabout.co.jp', 'mtx.allabout.co.jp',
+    'adimp.excite.co.jp', 'p4p.excite.co.jp',
+    'track.hatena.ne.jp', 'red.hatena.ne.jp',
+    /* Rakuten ad/tool subdomains */
+    'dynamic.rakuten.co.jp', 'etool.rakuten.co.jp',
+    'pitatto.rakuten.co.jp', 'ias.rakuten.co.jp',
+    /* Independent ad-tech vendors (suffix) */
+    '4dsply.com', 'actionrtb.com', 'ads2rtb.com', 'contextrtb.com',
+    'rtbads.info', 'rtbidder.net', 'rtbinternet.com', 'rtbtraf.com',
+    'acxiom-online.com', 'online-metrix.net',
+    'taxel.jp', 'proparm.jp', 'mediad2.jp',
+    'navdmp.com', 'navicast.jp', 'onedmp.com',
+    'pdmp.jp', 'dmpcounter.com', 'dtmp.jp', 'dtpf.jp', 'gmodmp.jp',
+    'log-marketing.jp', 'mcnt.jp', 'rtoaster.jp', 'showcase-tv.jp',
+    'microadinc.com', 'zucks.jp'
   ];
 
   function isAdUrl(url) {

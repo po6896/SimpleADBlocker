@@ -58,7 +58,7 @@ const AD_SERVER_PATTERNS = [
   /im-apps\.net\//,
   /cxense\.com\//,
   /nakanohito\.jp\//,
-  /amanad\.adtdp\.com\//,
+  /adtdp\.com\//,                 /* CyberAgent (amanad/dynalyst-sync 等) */
   /socdm\.com\//,
   /ladsp\.com\//,
   /dc-tag\.jp\//,
@@ -339,6 +339,76 @@ const AD_SERVER_PATTERNS = [
   /cloudflareinsights\.com\//,            /* CF Web Analytics */
   /connectid\.analytics\.yahoo\.com\//,   /* Yahoo ConnectID */
   /rfihub\.com\//,                        /* Rocket Fuel */
+
+  /* 2026-05-01 audit (round 6): live scan extended to 40 sites (job/EC/niche)
+     + ABP-JP filter list (k2jp/abp-japanese-filters) cross-check. */
+  /* — Path-based — */
+  /www\.google\.com\/rmkt\/collect\//,    /* Google Remarketing — 31-site spread */
+  /www\.google\.co\.jp\/pagead\/1p-user-list\//, /* Google 1p user list */
+  /xmtrading\.com\/affiliate_tracking/,   /* XM affiliate */
+
+  /* — Live-scan additions (suffix) — */
+  /r-ad\.ne\.jp\//,                       /* Recruit ad network */
+  /r-adimg\.com\//,                       /* Recruit ad image CDN */
+  /iqm\.com\//,                           /* IQM Corp */
+  /flvcdn\.net\//,                        /* FlvCDN tag */
+  /seseasky\.com\//,                      /* SeaSky obs */
+  /paa-reporting-advertising\.amazon\//,  /* Amazon PAA reporting */
+  /rtbsystem\.com\//,                     /* RTB System */
+  /adentifi\.com\//,                      /* Adentifi */
+  /kargo\.com\//,                         /* Kargo */
+  /loudecho\.ai\//,                       /* LoudEcho */
+  /adroll\.com\//,                        /* AdRoll */
+  /monetize-ssp\.com\//,                  /* Monetize SSP */
+  /adlion\.jp\//,                         /* Adlion */
+  /slim01\.jp\//,                         /* Slim01 (sister of slim02) */
+  /robee\.tech\//,                        /* Robee */
+  /marketo\.net\//,                       /* Marketo */
+  /contentsquare\.net\//,                 /* ContentSquare */
+  /advortex\.cloud\//,                    /* Advortex */
+  /cms\.analytics\.yahoo\.com\//,         /* Yahoo CMS analytics */
+  /dataplane\.rum\.[a-z0-9-]+\.amazonaws\.com\//, /* AWS RUM analytics */
+
+  /* — ABP-JP cross-check additions — */
+  /* Media-publisher own ad serving SDs */
+  /ad\.ameba\.jp\//,                      /* Ameba ads */
+  /ad\.goo\.ne\.jp\//,                    /* goo */
+  /ad\.hatena\.ne\.jp\//,                 /* Hatena */
+  /ad\.mainichi\.jp\//, /an\.mainichi\.jp\//, /* Mainichi */
+  /ad\.ntv\.co\.jp\//,                    /* NTV */
+  /ad\.response\.jp\//,                   /* Response */
+  /ad\.watch\.impress\.co\.jp\//, /ngs\.impress\.co\.jp\//, /* Impress */
+  /adcl\.sankei\.co\.jp\//,               /* Sankei */
+  /bizad\.nikkeibp\.co\.jp\//,            /* Nikkei BP */
+  /b\.gnavi\.co\.jp\//,                   /* Gnavi */
+  /imp\.allabout\.co\.jp\//, /mtx\.allabout\.co\.jp\//, /* AllAbout */
+  /adimp\.excite\.co\.jp\//, /p4p\.excite\.co\.jp\//, /* Excite */
+  /track\.hatena\.ne\.jp\//, /red\.hatena\.ne\.jp\//, /* Hatena tracking */
+  /* Rakuten ad / tool subdomains */
+  /dynamic\.rakuten\.co\.jp\//,
+  /etool\.rakuten\.co\.jp\//,
+  /pitatto\.rakuten\.co\.jp\//,
+  /ias\.rakuten\.co\.jp\//,
+  /* Independent ad-tech vendors (still active per cross-check) */
+  /4dsply\.com\//,                        /* 4Dsply */
+  /actionrtb\.com\//,                     /* Action RTB */
+  /ads2rtb\.com\//,                       /* Ads2RTB */
+  /contextrtb\.com\//,                    /* Context RTB */
+  /rtbads\.info\//, /rtbidder\.net\//,    /* RTB ad networks */
+  /rtbinternet\.com\//, /rtbtraf\.com\//,
+  /acxiom-online\.com\//,                 /* Acxiom */
+  /online-metrix\.net\//,                 /* ThreatMetrix */
+  /taxel\.jp\//,                          /* Taxel */
+  /proparm\.jp\//,                        /* ProParm */
+  /mediad2\.jp\//,                        /* MediaD2 */
+  /navdmp\.com\//, /navicast\.jp\//,      /* Nav DMP */
+  /onedmp\.com\//,                        /* OneDMP */
+  /pdmp\.jp\//, /dmpcounter\.com\//, /dtmp\.jp\//, /dtpf\.jp\//, /gmodmp\.jp\//,
+  /log-marketing\.jp\//, /mcnt\.jp\//,
+  /rtoaster\.jp\//,                       /* Rtoaster CDP */
+  /showcase-tv\.jp\//,                    /* Showcase Adv */
+  /microadinc\.com\//,                    /* MicroAd US */
+  /zucks\.jp\//,                          /* Zucks .jp TLD */
 ];
 
 function isAdUrl(url) {

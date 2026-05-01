@@ -72,6 +72,17 @@ const TARGETS = [
   { id: 'hatima', url: 'http://hatima.jp/' },
   { id: 'esuteru', url: 'http://blog.esuteru.com/' },
   { id: 'nico_news', url: 'https://www.nicovideo.jp/news/' },
+  /* round 6 — job / EC / niche */
+  { id: 'rikunabi_next', url: 'https://next.rikunabi.com/' },
+  { id: 'en_japan', url: 'https://en-japan.com/' },
+  { id: 'baitoru', url: 'https://www.baitoru.com/' },
+  { id: 'townwork', url: 'https://townwork.net/' },
+  { id: 'kakaku', url: 'https://kakaku.com/' },
+  { id: 'dmm', url: 'https://www.dmm.com/' },
+  { id: 'yahoo_auctions', url: 'https://auctions.yahoo.co.jp/' },
+  { id: 'mynavi_woman', url: 'https://woman.mynavi.jp/' },
+  { id: 'shonenjumpplus', url: 'https://shonenjumpplus.com/' },
+  { id: 'jalan', url: 'https://www.jalan.net/' },
 ];
 
 const UA_SLEIPNIR = 'Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 ' +
