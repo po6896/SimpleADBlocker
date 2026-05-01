@@ -68,7 +68,7 @@ const AD_SERVER_PATTERNS = [
   /* tier 1 — global SSP / DSP / cookie sync */
   /id5-sync\.com\//,
   /browsiprod\.com\//,
-  /match\.adsrvr\.org\//,
+  /adsrvr\.org\//,                /* TheTradeDesk (was: match.adsrvr.org only) */
   /tapad\.com\//,
   /lijit\.com\//,
   /s-onetag\.com\//,
@@ -119,6 +119,99 @@ const AD_SERVER_PATTERNS = [
   /nexx360\.io\//,                        /* Nexx360 SSP */
   /cdn\.jsdelivr\.net\/npm\/prebid/,      /* Prebid universal-creative */
   /www\.temu\.com\/api\/adx/,             /* Temu adx pixel (path-limited) */
+
+  /* 2026-05-01 audit (round 3): live scan of gamewith/game8/alfalfalfa/jin115/
+     gendai.media/nikkansports — vast SSP/DSP long-tail. Where multiple
+     subdomains hit, parent registrable domain is used to cover the whole net. */
+  /* — DSP / SSP global — */
+  /dotomi\.com\//,                        /* Conversant cookie match */
+  /smartadserver\.com\//,                 /* Smart AdServer */
+  /360yield\.com\//,                      /* Improve Digital */
+  /adkernel\.com\//,                      /* AdKernel */
+  /contextweb\.com\//,                    /* Contextweb (PubMatic) */
+  /yieldmo\.com\//,                       /* Yieldmo */
+  /sharethrough\.com\//,                  /* Sharethrough */
+  /loopme\.me\//,                         /* LoopMe */
+  /moloco\.com\//,                        /* Moloco DSP */
+  /blismedia\.com\//,                     /* Blis */
+  /goldspotmedia\.com\//,                 /* GoldSpot */
+  /btloader\.com\//,                      /* Sortable BurstThroughLoader */
+  /dns-finder\.com\//,                    /* DNS Finder */
+  /fastclick\.net\//,                     /* FastClick */
+  /mfadsrvr\.com\//,                      /* MFAdsrvr */
+  /pmbmonetize\.live\//,                  /* PMBMonetize */
+  /rtbhouse\.com\//,                      /* RTB House */
+  /creativecdn\.com\//,                   /* RTB House creative CDN */
+  /2mdn\.net\//,                          /* Google video creative */
+  /teads\.tv\//,                          /* Teads */
+  /mathtag\.com\//,                       /* MediaMath */
+  /gumgum\.com\//,                        /* GumGum */
+  /amxrtb\.com\//,                        /* AMX RTB */
+  /amx1\.net\//,                          /* AMX 1 */
+  /simpli\.fi\//,                         /* Simpli.fi */
+  /richaudience\.com\//,                  /* RichAudience */
+  /fwmrm\.net\//,                         /* FreeWheel */
+  /zemanta\.com\//,                       /* Outbrain Zemanta */
+  /outbrainimg\.com\//,                   /* Outbrain creative CDN */
+  /advolve\.io\//,                        /* Advolve */
+  /adtarget\.biz\//,                      /* AdTarget */
+  /durationmedia\.net\//,                 /* Duration Media */
+  /deepintent\.com\//,                    /* DeepIntent */
+  /trustedstack\.com\//,                  /* TrustedStack */
+  /ymmobi\.com\//,                        /* YM Mobi */
+  /sportradarserving\.com\//,             /* Sportradar */
+  /intentiq\.com\//,                      /* IntentIQ */
+  /smaato\.net\//,                        /* Smaato */
+  /unrulymedia\.com\//,                   /* Unruly (Tremor) */
+  /playdigo\.com\//,                      /* Playdigo */
+  /betweendigital\.com\//,                /* BetweenDigital */
+  /confiant-integrations\.net\//,         /* Confiant ad-security */
+  /privacymanager\.io\//,                 /* PrivacyManager CMP */
+  /appier\.net\//,                        /* Appier */
+  /pippio\.com\//,                        /* LiveRamp Pippio */
+  /quantserve\.com\//,                    /* Quantcast */
+  /inmobi\.com\//,                        /* InMobi */
+  /liftdsp\.com\//,                       /* Lift DSP */
+  /adrecover\.com\//,                     /* AdRecover */
+  /anymind360\.com\//,                    /* AnyMind ATS */
+  /img-c\.net\//,                         /* MicroAd creative */
+  /lmadps\.jp\//,                         /* Lemma */
+  /mediago\.io\//,                        /* MediaGo */
+
+  /* — DMP / data / brand-safety — */
+  /rlcdn\.com\//,                         /* LiveRamp */
+  /crwdcntrl\.net\//,                     /* Lotame */
+  /doubleverify\.com\//,                  /* DoubleVerify viewability */
+  /media\.net\//,                         /* Media.net ad network */
+  /opecloud\.com\//,                      /* OpeCloud */
+  /ccgateway\.net\//,                     /* Permutive */
+  /travelaudience\.com\//,                /* TravelAudience */
+
+  /* — JP-specific — */
+  /a\.flux\.jp\//,                        /* Flux SSP analytics */
+  /rtbrain\.app\//,                       /* RTBrain */
+  /adpushup\.com\//,                      /* AdPushup */
+  /speee-ad\.jp\//,                       /* Speee 広告 */
+  /speee-ad\.akamaized\.net\//,           /* Speee CDN */
+  /gsspcln\.jp\//,                        /* Geniee Cleantag */
+  /genieesspv\.jp\//,                     /* Geniee SSP V */
+  /mgid\.com\//,                          /* MGID (was: cdn/jsc only) */
+  /b99\.yahoo\.co\.jp\//,                 /* Yahoo conversion */
+  /cdp\.livedoor\.com\//,                 /* Livedoor CDP */
+  /counter2\.blog\.livedoor\.com\//,      /* Livedoor counter */
+  /t\.blog\.livedoor\.jp\//,              /* Livedoor tracking */
+  /ipcheck\.blogsys\.jp\//,               /* Blogsys IP check */
+  /cadmus2\.script\.ac\//,                /* Cadmus (script.ac全体は危険) */
+  /imp-bidapi\.i-mobile\.co\.jp\//,       /* i-mobile bidapi */
+  /spimgv1\.i-mobile\.co\.jp\//,          /* i-mobile creative */
+  /spnativeapi-direct\.i-mobile\.co\.jp\//, /* i-mobile native */
+  /spnativeapi-tls\.i-mobile\.co\.jp\//,  /* i-mobile native */
+  /afl\.rakuten\.co\.jp\//,               /* Rakuten affiliate */
+  /xml\.affiliate\.rakuten\.co\.jp\//,    /* Rakuten widget */
+
+  /* — path-only — */
+  /serv\.ds\.kakao\.com\/adx/,            /* Kakao Adx */
+  /px\.ads\.linkedin\.com/,               /* LinkedIn ads pixel */
 ];
 
 function isAdUrl(url) {
