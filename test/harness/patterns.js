@@ -212,6 +212,83 @@ const AD_SERVER_PATTERNS = [
   /* — path-only — */
   /serv\.ds\.kakao\.com\/adx/,            /* Kakao Adx */
   /px\.ads\.linkedin\.com/,               /* LinkedIn ads pixel */
+
+  /* 2026-05-01 audit (round 4): live scan of 16 sites — added newspapers
+     (mainichi/asahi/sankei/sponichi), business mags (president/toyokeizai/
+     bunshun/diamond), nlab.itmedia, yaraon. Surfaced JP-news SSP stack +
+     more global header-bidding networks. */
+  /* — DSP / SSP / cookie-sync — */
+  /syncingbridge\.com\//,                 /* user-sync bridge */
+  /eyeota\.net\//,                        /* DMP */
+  /ad-m\.asia\//,                         /* Ad-Mate Asia */
+  /relaido\.jp\//,                        /* Relaido video */
+  /piano\.io\//,                          /* Piano DMP / paywall analytics */
+  /shinobi\.jp\//,                        /* Shinobi adv */
+  /bance\.jp\//,                          /* Bance SSP/DSP family */
+  /liadm\.com\//,                         /* LiveIntent */
+  /caprofitx\.com\//,                     /* CA ProFitX */
+  /connatix\.com\//,                      /* Connatix video */
+  /nrich\.ai\//,                          /* Nrich DSP */
+  /4dex\.tech\//,                         /* 4dex tech (sister of 4dex.io) */
+  /insiad\.com\//,                        /* InsiAd */
+  /primis\.tech\//,                       /* Primis */
+  /gsspat\.jp\//,                         /* Geniee SSP-AT */
+  /indexww\.com\//,                       /* Index Exchange */
+  /hubvisor\.io\//,                       /* Hubvisor */
+  /agkn\.com\//,                          /* Aki Tech */
+  /w55c\.net\//,                          /* DataXu */
+  /yellowblue\.io\//,                     /* YellowBlue */
+  /admanmedia\.com\//,                    /* Adman Media */
+  /gmossp-sp\.jp\//,                      /* GMO SSP */
+  /measureadv\.com\//,                    /* MeasureAdv */
+  /sparteo\.com\//,                       /* Sparteo */
+  /sitescout\.com\//,                     /* Centro/SiteScout */
+  /everesttech\.net\//,                   /* Adobe Everest DSP */
+  /colossusssp\.com\//,                   /* Colossus SSP */
+  /openxcdn\.net\//,                      /* OpenX CDN */
+  /ipredictive\.com\//,                   /* Adelphic */
+  /krushmedia\.com\//,                    /* Krush Media */
+  /turn\.com\//,                          /* Amobee Turn */
+  /imrworldwide\.com\//,                  /* Nielsen */
+  /smartadhi\.com\//,                     /* SmartAdhi */
+  /springserve\.com\//,                   /* SpringServe */
+  /tremorhub\.com\//,                     /* Tremor */
+  /fireworktv\.com\//,                    /* Firework */
+  /d2-apps\.net\//,                       /* D2-apps */
+  /monetixads\.com\//,                    /* MonetixAds */
+  /ocmthood\.com\//,                      /* OCMTHood */
+  /bricks-co\.com\//,                     /* Bricks */
+  /mulan\.cloud\//,                       /* Mulan */
+  /sp-trk\.com\//,                        /* sp-trk */
+  /pushmaster-cdn\.xyz\//,                /* PushMaster */
+  /ust-ad\.com\//,                        /* UST Ad */
+  /mediarithmics\.com\//,                 /* Mediarithmics */
+  /omnitagjs\.com\//,                     /* Omni */
+  /chartbeat\.(com|net)\//,               /* Chartbeat analytics */
+  /exelator\.com\//,                      /* Nielsen Exelate */
+  /macromill\.com\//,                     /* Macromill */
+  /npttech\.com\//,                       /* NPTTech */
+  /slim02\.jp\//,                         /* Slim02 DSP */
+  /smartnews-ads\.com\//,                 /* SmartNews Ads */
+  /pa-cd\.com\//,                         /* パークリック */
+  /fwpub1\.com\//,                        /* fwpub1 (FreeWheel pub) */
+  /fwpixel\.com\//,                       /* fwpixel */
+  /salesforce\.com\/web\/v2\/authentication/, /* SF c360a auth — narrow */
+
+  /* — Yahoo / Google / LINE specifics (host-precise) — */
+  /apm\.yahoo\.co\.jp\//,                 /* Yahoo PPM */
+  /cksync\.yahoo\.co\.jp\//,              /* Yahoo cookie sync */
+  /im\.c\.yimg\.jp\//,                    /* Yahoo display creative */
+  /imasdk\.googleapis\.com\//,            /* Google IMA video ads SDK */
+  /\/\/c\.bing\.com\/c\.gif/,             /* Bing tracking */
+  /fluctssp\.smt\.docomo\.ne\.jp\//,      /* DOCOMO Fluct SSP */
+  /tr\.line\.me\//,                       /* LINE Tag */
+  /d\.line-scdn\.net\/n\/line_tag/,       /* LINE Tag CDN (path) */
+  /\/\/c360a\.salesforce\.com\//,         /* Salesforce CDP */
+  /adsdkprod\.azureedge\.net\//,          /* CA viewability SDK */
+  /edayo\.miyuki-web\.net\//,             /* edayo */
+  /ssp-sync\.i-mobile\.co\.jp\//,         /* i-mobile sync */
+  /www\.temu\.com\/api\/x/,               /* Temu /api/x pixel */
 ];
 
 function isAdUrl(url) {

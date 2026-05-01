@@ -39,12 +39,24 @@ function isKnownAd(url, host) {
 }
 
 const TARGETS = [
+  /* round 3 (already audited) — kept for regression value */
   { id: 'gamewith', url: 'https://gamewith.jp/' },
   { id: 'game8', url: 'https://game8.jp/' },
   { id: 'alfalfalfa', url: 'http://alfalfalfa.com/' },
   { id: 'jin115', url: 'http://jin115.com/' },
   { id: 'gendai_media', url: 'https://gendai.media/' },
   { id: 'nikkansports', url: 'https://www.nikkansports.com/' },
+  /* round 4 — newspapers / business / curation */
+  { id: 'mainichi', url: 'https://mainichi.jp/' },
+  { id: 'asahi', url: 'https://www.asahi.com/' },
+  { id: 'sankei', url: 'https://www.sankei.com/' },
+  { id: 'sponichi', url: 'https://www.sponichi.co.jp/' },
+  { id: 'president', url: 'https://president.jp/' },
+  { id: 'toyokeizai', url: 'https://toyokeizai.net/' },
+  { id: 'bunshun', url: 'https://bunshun.jp/' },
+  { id: 'diamond', url: 'https://diamond.jp/' },
+  { id: 'nlab_itmedia', url: 'https://nlab.itmedia.co.jp/' },
+  { id: 'yaraon', url: 'http://yaraon-blog.com/' },
 ];
 
 const UA_SLEIPNIR = 'Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 ' +
