@@ -443,6 +443,111 @@ const AD_SERVER_PATTERNS = [
   /ero-advertising\.com\//,               /* Ero-Advertising */
   /adultadvertising\.net\//,              /* AdultAdvertising */
 
+  /* 2026-05-12 audit (round 8): live scan extended to 66 sites
+     — user-directed (apex-leaks-overwatch2/corocoro/x/facebook/reddit/amazon)
+     + manga viewer (comic-walker/comicdays/manga-up)
+     + overseas gaming (dexerto/dotesports/pcgamer/eurogamer/polygon/ign/gamespot)
+     + EC (rakuten/yahoo-shopping/mercari/yodobashi)
+     + SNS (bsky/threads). */
+  /* — Overseas gaming SSP/DSP cluster (33across/Opera/Smilewanted/...) — */
+  /opera\.com\/(?:pub|sync|setuid|adx|oa)/, /* Opera Mediaworks DSP (t.adx/t.oa) */
+  /t\.(?:adx|oa)\.opera\.com\//,           /* Opera DSP hosts */
+  /33across\.com\//,                       /* 33across SSP */
+  /smilewanted\.com\//,                    /* Smilewanted SSP */
+  /rbstsystems\.live\//,                   /* RBST sync */
+  /iqzonertb\.live\//,                     /* IQZone RTB */
+  /pbs\.optidigital\.com\//, /scripts\.opti-digital\.com\//, /* Opti Digital */
+  /eskimi\.com\//,                         /* Eskimi DSP */
+  /sundaysky\.com\//,                      /* SundaySky DMP */
+  /the-ozone-project\.com\//,              /* Ozone Project SSP */
+  /tynt\.com\//,                           /* 33across Tynt */
+  /newsroom\.bi\//,                        /* newsroom.bi tracker */
+  /a-mx\.com\//, /a-mo\.net\//,            /* AMX DSP (a-mo already; a-mx host) */
+  /dv\.tech\//,                            /* DoubleVerify DV (cdn/pub/vtrk) */
+  /omni-dex\.io\//,                        /* Omni-Dex exchange */
+  /shb-sync\.com\//,                       /* SHB sync */
+  /servebom\.com\//,                       /* ServeBom */
+  /flashtalking\.com\//,                   /* Flashtalking creative */
+  /ck-ie\.com\//,                          /* CK-IE InMobi sync */
+  /ghtinc\.com\//,                         /* GHT Inc cookie match */
+  /hybrid\.ai\//,                          /* Hybrid.ai DSP */
+  /hadronid\.net\//, /hadron\.ad\.gt\//,   /* Hadron ID */
+  /cmcd1\.com\//,                          /* CMCD/RhythmOne */
+  /ortb\.net\//,                           /* ORTB tracker */
+  /pinklion\.io\//,                        /* PinkLion sync */
+  /e-volution\.ai\//,                      /* e-volution DSP */
+  /admixer\.net\//,                        /* Admixer */
+  /ads-tinyorbit\.com\//,                  /* TinyOrbit */
+  /sascdn\.com\//,                         /* SmartAdServer CDN */
+  /brandmetrics\.com\//,                   /* BrandMetrics */
+  /pangle-ads\.com\//,                     /* ByteDance Pangle ads */
+  /bidpapers\.com\//,                      /* Bidpapers */
+  /infolinks\.com\//,                      /* Infolinks */
+  /sentinelpro\.com\//,                    /* Sentinel Pro (Valnet) */
+  /cm-exchange\.toast\.com\//, /cm\.nhnace\.com\//, /* NHN/Toast cookie match */
+  /rqtrk\.eu\//,                           /* rqtrk EU tracker */
+  /pgammedia\.com\//,                      /* PGam Media */
+  /aditude\.(?:io|cloud)\//,               /* Aditude (raven/edge/geo) */
+  /vidazoo\.com\//,                        /* Vidazoo */
+  /clickagy\.com\//,                       /* Clickagy aorta */
+  /sonobi\.com\//,                         /* Sonobi */
+  /pubeasy\.io\//,                         /* PubEasy */
+  /ottadvisors\.com\//,                    /* OTT Advisors */
+  /mrf\.io\//,                             /* Marfeel SDK */
+  /admaster\.cc\//,                        /* AdMaster */
+  /ftstatic\.com\//,                       /* Future static (ajs/agen) */
+  /ad-score\.com\//,                       /* Adloox AdScore */
+  /anonymised\.io\//, /anonm\.io\//,       /* Anonymised.io DMP */
+  /cpmstar\.com\//,                        /* CPMStar */
+  /adsninja\.ca\//,                        /* AdsNinja */
+  /webcontentassessor\.com\//,             /* WebContentAssessor */
+  /pbxai\.com\//,                          /* PBX AI */
+  /cpx\.to\//,                             /* CPX */
+  /postrelease\.com\//,                    /* Nativo Postrelease */
+  /p7cloud\.net\//,                        /* p7cloud (ARCSPAN) */
+  /bidgx\.com\//,                          /* bidgx */
+  /html-load\.com\//,                      /* html-load creative */
+  /clarium\.io\//,                         /* Clarium adblock detect */
+  /\.ad\.gt\//,                            /* ad.gt (a.ad.gt/seg.ad.gt) */
+  /udmserve\.net\//,                       /* udmserve */
+  /dotmetrics\.net\//,                     /* dotmetrics */
+  /cinarra\.com\//,                        /* Cinarra */
+  /xplosion\.de\//,                        /* Xplosion */
+  /acuityplatform\.com\//,                 /* AcuityPlatform */
+  /bttrack\.com\//,                        /* bttrack */
+  /wikia-services\.com\/__track/,          /* Fandom tracker (path-limited) */
+  /wikia\.nocookie\.net\/.*\/prebid/,      /* Fandom prebid (path-limited) */
+  /groovinads\.com\//,                     /* GroovinAds */
+  /adfarm1\.adition\.com\//,               /* Adition DSP */
+  /insightexpressai\.com\//,               /* Kantar InsightExpressAI */
+  /trackonomics\.net\//,                   /* Trackonomics */
+  /optmn\.cloud\//,                        /* optmn cloud */
+  /parsely\.com\//, /p1\.parsely\.com\//,  /* Parse.ly analytics */
+  /pbs\.yahoo\.com\/setuid/,               /* Yahoo PBS setuid (path-limited) */
+  /i\.viafoura\.co\/v3\/.*\/ingest/,       /* Viafoura ingest (path-limited) */
+  /events\.newsroom\.bi\//,                /* newsroom.bi events */
+  /sonar\.script\.ac\//,                   /* script.ac sonar (host-limited) */
+  /ctnsnet\.com\//,                        /* ctnsnet */
+  /mobilefuse\.com\//,                     /* MobileFuse */
+  /ml314\.com\//,                          /* ML314 Bombora */
+  /pinimg\.com\/ct/, /ct\.pinterest\.com\//, /* Pinterest conv pixel */
+  /cookielaw\.org\//,                      /* OneTrust cookielaw (CMP) */
+  /cookiebot\.com\//, /consentcdn\.cookiebot\.com\//, /* Cookiebot CMP */
+  /link-ag\.net\//,                        /* Link-AG affiliate */
+  /valuecommerce\.com\//,                  /* ValueCommerce affiliate */
+  /ad-drop\.jp\//,                         /* Ad-Drop JP SSP */
+  /authorizedvault\.com\//,                /* Authorized Vault sync */
+  /jp1media\.com\//,                       /* JP1 Media */
+  /mira-dsp\.com\//,                       /* mira-dsp */
+  /eagle-insight\.com\//,                  /* Eagle Insight */
+  /adster\.tech\//,                        /* Adster */
+  /disqus\.com\/redirectuser/,             /* Disqus SSP redirectuser (path-limited) */
+  /prebid\.cloud\//,                       /* Prebid cloud */
+  /posthog\.com\//,                        /* PostHog analytics */
+  /go-mpulse\.net\//,                      /* Akamai mPulse RUM */
+  /s\.yjtag\.jp\//,                        /* Yahoo JP smart tag (s.yjtag.jp) */
+  /\/events\?cee=no/,                      /* Marfeel CEE event ingest (path-only) */
+
   /* — Mobile ad SDKs (also fire from in-app WebView) — */
   /applovin\.com\//,                      /* AppLovin */
   /applvn\.com\//,                        /* AppLovin short */
