@@ -548,6 +548,57 @@ const AD_SERVER_PATTERNS = [
   /s\.yjtag\.jp\//,                        /* Yahoo JP smart tag (s.yjtag.jp) */
   /\/events\?cee=no/,                      /* Marfeel CEE event ingest (path-only) */
 
+  /* 2026-05-13 audit (round 9): live scan of 15 webtoon/manga + overseas
+     image-board/matome sites (webtoons/lezhin/tappytoon/mangadex/mangaplus/
+     bookwalker/toomics/9gag/imgur/boredpanda/knowyourmeme/cracked/demilked/
+     quora/imgflip). imgur SPA stuck → added 60s hard timeout to scanner.
+     Heavy overlap with Bounce Exchange / Intergient / Playwire stack. */
+  /onetrust\.com\//,                       /* OneTrust SDK (cookielaw was; CDN sub-hosts) */
+  /intergient\.com\//,                     /* Intergient SSP */
+  /intergi\.com\//,                        /* Intergi (sister) */
+  /bounceexchange\.com\//, /bouncex\.net\//, /* Bounce Exchange */
+  /wknd\.ai\//,                            /* wknd.ai (Adelaide) */
+  /connectad\.io\//,                       /* ConnectAd */
+  /playwire\.com\//,                       /* Playwire ad mgmt */
+  /viously\.com\//,                        /* Viously video ads */
+  /pro-market\.net\//,                     /* ProMarket DSP */
+  /thrtle\.com\//,                         /* throttle sync (suspect) */
+  /cdnwidget\.com\//,                      /* cdnwidget (Bounce-related) */
+  /rapidedge\.io\//,                       /* RapidEdge metrics */
+  /bydata\.com\//,                         /* bydata telemetry */
+  /media-lab\.ai\//,                       /* media-lab analytics */
+  /startappnetwork\.com\//,                /* StartApp network (host suffix) */
+  /mygaru\.com\//, /mgaru\.dev\//,         /* myGaru ID */
+  /e-planning\.net\//,                     /* e-planning DSP */
+  /rezync\.com\//,                         /* ReZync sync */
+  /aaxads\.com\//,                         /* AAX ads */
+  /cdnbasket\.net\//,                      /* cdnbasket */
+  /trueanthem\.com\//,                     /* TrueAnthem */
+  /t13\.io\//,                             /* t13 SSP */
+  /lunamedia\.live\//,                     /* LunaMedia */
+  /uidapi\.com\//,                         /* UID2 (TheTradeDesk) */
+  /airbridge\.io\//, /abr\.ge\//,          /* Airbridge mobile attribution */
+  /amplitude\.com\//,                      /* Amplitude analytics */
+  /tr\.snapchat\.com\//, /tr6\.snapchat\.com\//, /* Snapchat pixel */
+  /quantcount\.com\//,                     /* Quantcast (sister of quantserve) */
+  /dwin2\.com\//,                          /* AWIN affiliate */
+  /\.pub\.network\//,                      /* Pub.network ad mgmt */
+  /privacy-center\.org\//,                 /* privacy-center CMP */
+  /rkdms\.com\//,                          /* RKDMS */
+  /analytics\.ahrefs\.com\//,              /* Ahrefs analytics */
+  /groovespacing\.com\//,                  /* groovespacing (suspect) */
+  /honeybulb\.com\//,                      /* honeybulb (suspect) */
+  /marriedmailbox\.com\//,                 /* marriedmailbox (suspect) */
+  /webbyword\.net\//,                      /* webbyword (suspect) */
+  /appsflyersdk\.com\//, /onelink\.me\//,  /* AppsFlyer */
+  /tivan\.naver\.com\//, /veta\.naver\.com\//, /* Naver tracker (host-limited) */
+  /ntv\.io\//,                             /* Nativo (s.ntv.io serve) */
+  /\/\/alb\.reddit\.com\//, /pixel-config\.reddit\.com\//, /* Reddit Pixel */
+  /www\.redditstatic\.com\/ads\//,         /* Reddit Pixel JS (path-limited) */
+  /capig\.stape\.jp\//,                    /* Stape sGTM (capig) */
+  /sync\.adtech\.ink\//,                   /* AdTech.ink sync */
+  /sync\.adtelligent\.com\//,              /* Adtelligent sync */
+
   /* — Mobile ad SDKs (also fire from in-app WebView) — */
   /applovin\.com\//,                      /* AppLovin */
   /applvn\.com\//,                        /* AppLovin short */

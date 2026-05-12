@@ -109,6 +109,22 @@ const TARGETS = [
   { round: 7, id: 'threads', url: 'https://www.threads.net/' },
   { round: 7, id: '5ch', url: 'https://5ch.net/' },
   { round: 7, id: 'mastodon_social', url: 'https://mastodon.social/explore' },
+  /* round 8 — webtoon/overseas-manga + overseas matome/image boards */
+  { round: 8, id: 'webtoons', url: 'https://www.webtoons.com/en/' },
+  { round: 8, id: 'lezhin', url: 'https://www.lezhin.com/en' },
+  { round: 8, id: 'tappytoon', url: 'https://www.tappytoon.com/' },
+  { round: 8, id: 'mangadex', url: 'https://mangadex.org/' },
+  { round: 8, id: 'mangaplus', url: 'https://mangaplus.shueisha.co.jp/updates' },
+  { round: 8, id: 'bookwalker', url: 'https://bookwalker.jp/' },
+  { round: 8, id: 'toomics', url: 'https://toomics.com/' },
+  { round: 8, id: '9gag', url: 'https://9gag.com/' },
+  { round: 8, id: 'imgur', url: 'https://imgur.com/' },
+  { round: 8, id: 'boredpanda', url: 'https://www.boredpanda.com/' },
+  { round: 8, id: 'knowyourmeme', url: 'https://knowyourmeme.com/' },
+  { round: 8, id: 'cracked', url: 'https://www.cracked.com/' },
+  { round: 8, id: 'demilked', url: 'https://www.demilked.com/' },
+  { round: 8, id: 'quora', url: 'https://www.quora.com/' },
+  { round: 8, id: 'imgflip', url: 'https://imgflip.com/' },
 ];
 
 const UA_SLEIPNIR = 'Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 ' +
@@ -168,16 +184,21 @@ async function scanOne(browser, target) {
 
   const page = await ctx.newPage();
   console.error(`[scan] ${target.id} ${target.url}`);
-  try {
-    await page.goto(target.url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
-    await autoScroll(page);
-    await page.waitForTimeout(2000);
-  } catch (e) {
-    console.error(`  ERROR: ${e.message}`);
-  }
+  const hardDeadline = new Promise((resolve) => setTimeout(() => resolve('__hard_timeout__'), 60000));
+  const work = (async () => {
+    try {
+      await page.goto(target.url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+      await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+      await autoScroll(page);
+      await page.waitForTimeout(2000);
+    } catch (e) {
+      console.error(`  ERROR: ${e.message}`);
+    }
+  })();
+  const res = await Promise.race([work, hardDeadline]);
+  if (res === '__hard_timeout__') console.error(`  HARD TIMEOUT (60s) for ${target.id}`);
 
-  await ctx.close();
+  await ctx.close().catch(() => {});
   return { id: target.id, hosts: counts };
 }
 
@@ -187,7 +208,10 @@ async function scanOne(browser, target) {
 
   const roundIdx = process.argv.indexOf('--round');
   const onlyRound = roundIdx !== -1 ? parseInt(process.argv[roundIdx + 1], 10) : null;
-  const targets = onlyRound ? TARGETS.filter(t => t.round === onlyRound) : TARGETS;
+  const skipIdx = process.argv.indexOf('--skip');
+  const skipSet = new Set(skipIdx !== -1 ? process.argv[skipIdx + 1].split(',') : []);
+  const targets = (onlyRound ? TARGETS.filter(t => t.round === onlyRound) : TARGETS)
+    .filter(t => !skipSet.has(t.id));
 
   for (const t of targets) {
     const { id, hosts } = await scanOne(browser, t);
