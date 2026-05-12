@@ -10,32 +10,32 @@
 // @include         http://*
 // @include         https://*
 // @version         5.5.4
-// @history         5.5.4 Round-9 — live scan +15 webtoon/manga (webtoons/lezhin/tappytoon/mangadex/mangaplus/bookwalker/toomics) + overseas image-board/matome (9gag/imgur/boredpanda/knowyourmeme/cracked/demilked/quora/imgflip); add 50+ rules incl. Bounce Exchange, Intergient, Playwire, Viously, Snapchat pixel, AppsFlyer, Amplitude. Scanner gains 60s hard timeout per site.
-// @history         5.5.3 Round-8 — live scan 40→66 sites (user-directed + manga viewer + overseas gaming + EC + SNS); add 100+ rules incl. 33across, Opera DSP, Smilewanted, Eskimi, Flashtalking, Aditude, Vidazoo, AdsNinja, Marfeel CEE path block.
-// @history         5.5.2 Round-7 — EasyList cross-check + adult + mobile SDK; add 50+ rules.
-// @history         5.5.1 Round-6 audit — live scan 30→40 + ABP-JP cross-check; add 60+ rules incl. Google rmkt/pagead, Recruit ad network, media-publisher SDs.
-// @history         5.5.0 Round-5 audit — live scan extended to 30 sites; add 50+ rules incl. Google CCM, Adobe AAM/DTM/MC, 3lift, Presage, StackAdapt, OneSignal, Yandex.
-// @history         5.4.5 Round-4 audit — live scan extended to 16 sites; add 70+ SSP/DSP/DMP rules.
-// @history         5.4.4 Round-3 audit — live scan of 6 ad-heavy JP sites; add 80+ SSP/DSP/DMP rules.
-// @history         5.4.3 Round-2 audit across retired HAR — add 12 SSP/DMP/sync rules.
-// @history         5.4.2 Add SSP/CDN missed in 04-30 corpus replay; fix path-match bug in isAdUrl.
-// @history         5.4.1 Add 21 ad/tracker domains found in JP corpus HAR audit.
-// @history         5.4.0 Kill empty ad shells and IAB-sized wrappers to fix CLS.
-// @history         5.3.2 Add @icon metadata for gallery upload.
-// @history         4.8.1 Initial gallery release.
-// @history:ja      5.5.4 第9弾監査(Webtoon/海外マンガ+海外掲示板/画像系15サイト)で50+ルール追加。Bounce Exchange, Intergient, Playwire, Viously, Snapchat pixel, AppsFlyer, Amplitude 等。scannerに60秒ハードタイムアウト追加。
-// @history:ja      5.5.3 第8弾監査(40→66サイトliveスキャン: 指示サイト+マンガビューア+海外ゲーミング+EC+SNS)で100+ルール追加。33across, Opera DSP, Smilewanted, Eskimi, Flashtalking, Aditude, Vidazoo, AdsNinja, Marfeel CEE path block 等。
-// @history:ja      5.5.2 第7弾監査(EasyList統合+アダルト+モバイルSDK)で50+ルール追加。
-// @history:ja      5.5.1 第6弾監査(30→40サイト+ABP-JP統合)で60+ルール追加。Google rmkt/pagead、Recruit ad、メディア専属広告SD多数。
-// @history:ja      5.5.0 第5弾監査(30サイト拡張)で50+ルール追加。Google CCM、Adobe AAM/DTM/MC、3lift、Presage、StackAdapt、OneSignal、Yandex 等。
-// @history:ja      5.4.5 第4弾監査(16サイトliveスキャン拡張)でSSP/DSP/DMP 70+ルール追加。
-// @history:ja      5.4.4 第3弾監査(JP広告6サイトliveスキャン)でSSP/DSP/DMP 80+ルール追加。
-// @history:ja      5.4.3 廃止HAR含む第2弾監査でSSP/DMP/sync 12ルール追加。
-// @history:ja      5.4.2 corpus replay監査で漏れていたSSP/CDNを追加、isAdUrlのpath判定バグ修正。
-// @history:ja      5.4.1 JPコーパスHAR監査で漏れていた広告/トラッカー21ドメインを追加。
-// @history:ja      5.4.0 空の広告shell/IAB規格サイズwrapperも削除してCLS改善。
-// @history:ja      5.3.2 ギャラリーアップロード用に @icon を追加。
-// @history:ja      4.8.1 ギャラリー初回リリース。
+// @history         5.5.4 Added ad hosts seen on webtoon/manga sites and overseas image-board/matome pages. Scanner now bounds wait time per site so SPA pages that never settle don't stall the run.
+// @history         5.5.3 Added ad networks used on JP manga viewers, overseas gaming media, and EC sites. Marfeel-style trackers with dynamic cloud host names are now caught by URL path.
+// @history         5.5.2 Cross-checked against major filter lists to pick up older established networks, adult ad networks, and the mobile ad SDKs that fire from in-app WebViews.
+// @history         5.5.1 Cross-checked against the ABP-JP list to pick up self-served ad slots on Japanese media sites. Google remarketing endpoints and Recruit's ad network also covered.
+// @history         5.5.0 Coverage extended to IT, gaming, lifestyle, job-board, and matome sites. Added Google Conversion Manager, Adobe AAM/DTM/MC, TripleLift, Yandex and other commonly-seen long-tail networks.
+// @history         5.4.5 Coverage extended to newspapers, business magazines, and news-curation sites. Picked up the broadsheet-side ad networks.
+// @history         5.4.4 Coverage extended to game-strategy and matome blog sites. Picked up many mid-tier JP ad networks.
+// @history         5.4.3 Replayed older traffic captures to grab hosts that had been missed earlier.
+// @history         5.4.2 Replayed corpus captures to pick up hosts that slipped through. Fixed a path-match bug in the URL classifier.
+// @history         5.4.1 Audited recent JP-site traffic captures and added the ad/tracker hosts that were missing.
+// @history         5.4.0 Empty ad shells and IAB-sized empty frames are now removed too, to keep layout from shifting.
+// @history         5.3.2 Added @icon metadata required by the gallery upload form.
+// @history         4.8.1 First gallery release.
+// @history:ja      5.5.4 Webtoon・海外マンガ系、海外の画像板/まとめ系サイトで使われていた広告ホストを追加。読み込みが終わらないSPAページでスキャンが止まらないよう、1サイトあたりの待ち時間に上限を入れた。
+// @history:ja      5.5.3 国内マンガビューア、海外のゲーミング系メディア、ECサイトで使われていた広告ネットワークを追加。Marfeel経由のように動的なクラウドホスト名を使うトラッカーをURLパスでまとめてブロックできるようにした。
+// @history:ja      5.5.2 海外の主要広告フィルタリストとの照合で漏れていた老舗ネットワーク、アダルト系、ゲーム内Webview経由で表示される広告SDKに対応。
+// @history:ja      5.5.1 ABP-JPフィルタリストとの照合で日本国内メディアの自前広告枠を追加。Google再マーケティングのエンドポイントや、リクルート系の広告も対応。
+// @history:ja      5.5.0 IT、ゲーム、生活、求人、まとめ系サイトに対応を拡げた。Google Conversion Manager、Adobeの解析(AAM/DTM/MC)、TripleLift、Yandexなどを追加。
+// @history:ja      5.4.5 新聞、ビジネス誌、ニュースまとめ系サイトに対応を拡げた。一般紙側で使われる広告ネットワークを取り込んだ。
+// @history:ja      5.4.4 ゲーム攻略・まとめブログ系サイトに対応を拡げた。国内向けの中堅広告ネットワークを多数取り込んだ。
+// @history:ja      5.4.3 以前ためてあった通信ログを再走査して、当時拾い漏れていた広告/シンクのホストを追加。
+// @history:ja      5.4.2 通信ログの再生確認で漏れていた広告ホストを追加。URLパス判定のバグも修正。
+// @history:ja      5.4.1 国内サイトの通信ログ監査で見つかった広告/トラッカーホストを追加。
+// @history:ja      5.4.0 中身が空の広告枠やIAB規格サイズの空フレームも消すようにして、レイアウトのずれを抑えた。
+// @history:ja      5.3.2 ギャラリーへのアップロードに必要なアイコン(@icon)を付けた。
+// @history:ja      4.8.1 ギャラリーへの初回公開。
 // @require         api
 // @require         jquery
 // ==/UserScript==
