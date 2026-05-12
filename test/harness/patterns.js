@@ -546,7 +546,7 @@ const AD_SERVER_PATTERNS = [
   /posthog\.com\//,                        /* PostHog analytics */
   /go-mpulse\.net\//,                      /* Akamai mPulse RUM */
   /s\.yjtag\.jp\//,                        /* Yahoo JP smart tag (s.yjtag.jp) */
-  /\/events\?cee=no/,                      /* Marfeel CEE event ingest (path-only) */
+  /\.run\.app\/events\?cee=no/,            /* Marfeel CEE event ingest (GCP cloud-run only — AWS ECS is site-owned) */
 
   /* 2026-05-13 audit (round 9): live scan of 15 webtoon/manga + overseas
      image-board/matome sites (webtoons/lezhin/tappytoon/mangadex/mangaplus/
