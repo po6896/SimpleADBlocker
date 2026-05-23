@@ -43,9 +43,16 @@ function judge(entry, vanilla, blocked, baseline) {
       failures.push(`ad still visible: ${hit.selector} (${hit.visible})`);
     }
   }
-  for (const hit of blocked.surviveHits) {
+  for (let i = 0; i < blocked.surviveHits.length; i++) {
+    const hit = blocked.surviveHits[i];
+    const vhit = (vanilla.surviveHits || [])[i];
     if (hit.total === 0 || hit.visible === 0) {
       failures.push(`must_survive missing: ${hit.selector}`);
+    } else if (hit.occluded > 0 && (!vhit || vhit.occluded === 0)) {
+      /* Survivor is visible but a foreign element covers its center,
+         swallowing taps. Vanilla wasn't occluded here, so the blocker
+         introduced it — the 5.5.5 tap-swallow regression class. */
+      failures.push(`must_survive occluded by blocker (tap blocked): ${hit.selector} (${hit.occluded})`);
     }
   }
 

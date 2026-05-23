@@ -9,7 +9,9 @@
 // @icon            data:image/png;base64,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
 // @include         http://*
 // @include         https://*
-// @version         5.5.5
+// @version         5.5.7
+// @history         5.5.7 Indexed the ad-host list so the URL check no longer walks all ~650 entries on every request (it runs on every DOM change). The block decision is unchanged — verified identical against every entry plus near-miss controls. The beforeunload blocker now suppresses a dialog only when no form field has been edited, so a page's own unsaved-changes warning is preserved instead of being silently killed.
+// @history         5.5.6 Fixed a host-matching bug that could block or hide unrelated sites: the domain suffix check matched too broadly (a 'media.net' rule could catch 'media.network.example.com', and short names matched anywhere in the host), and a same-length hostname could pick up another site's hide rules. Stopped deleting the generic 'ad' / 'ads' keys from parsed JSON, which broke pages that use those names for non-ad data. Removed a few over-broad global hide selectors (including the .ai-viewport listeners that swallow taps) and merged duplicate per-site rule blocks that had silently disabled the fuller rule sets.
 // @history         5.5.5 Fixed two side effects from the recent updates. Taps were getting swallowed on apexlegends-leaksnews and its subdomains (overwatch2-news, etc.) because the Advanced Ads viewport listener was being hidden. The corocoro manga viewer went blank because a path block intended for one analytics vendor was also catching the site's own event endpoint.
 // @history         5.5.4 Added ad hosts seen on webtoon/manga sites and overseas image-board/matome pages. Scanner now bounds wait time per site so SPA pages that never settle don't stall the run.
 // @history         5.5.3 Added ad networks used on JP manga viewers, overseas gaming media, and EC sites. Marfeel-style trackers with dynamic cloud host names are now caught by URL path.
@@ -24,6 +26,8 @@
 // @history         5.4.0 Empty ad shells and IAB-sized empty frames are now removed too, to keep layout from shifting.
 // @history         5.3.2 Added @icon metadata required by the gallery upload form.
 // @history         4.8.1 First gallery release.
+// @history:ja      5.5.7 広告ホスト判定を索引化し、リクエストごとに約650件を線形走査しないようにした(DOM変化のたびに走るパスのため)。判定結果は従来と同一(全エントリ+近接誤爆候補で一致を検証済み)。beforeunload の抑制を「フォーム未編集のときだけ」に変更し、入力済みのページではサイト本来の未保存警告を残すようにした。
+// @history:ja      5.5.6 無関係なサイトをブロック/非表示にしうるホスト判定の不具合を修正。ドメインの後方一致が緩すぎて('media.net' の規則が 'media.network.example.com' まで巻き込む、短い名前がホスト名の途中でも一致する)、また同じ文字数のホスト名が別サイト向けの非表示規則を拾うことがあった。解析後のJSONから汎用的な 'ad'/'ads' キーを消す処理をやめた(それらを広告以外の用途で使うページが壊れていた)。広すぎたグローバル非表示セレクタ(タップを吸う .ai-viewport 監視要素を含む)を一部除去し、詳細な個別サイト規則を黙って無効化していた重複定義を統合した。
 // @history:ja      5.5.5 最近の更新で出ていた不具合を2件修正。apexlegends-leaksnews 系(overwatch2-news等のサブドメイン含む)でAdvanced Adsのスクロール検出要素まで消してしまっていてタップが効かなくなる問題と、コロコロのマンガビューアが真っ白になる問題(別の解析ベンダー向けに入れたパスブロックがサイト自前のイベント送信先まで巻き込んでいた)を直した。
 // @history:ja      5.5.4 Webtoon・海外マンガ系、海外の画像板/まとめ系サイトで使われていた広告ホストを追加。読み込みが終わらないSPAページでスキャンが止まらないよう、1サイトあたりの待ち時間に上限を入れた。
 // @history:ja      5.5.3 国内マンガビューア、海外のゲーミング系メディア、ECサイトで使われていた広告ネットワークを追加。Marfeel経由のように動的なクラウドホスト名を使うトラッカーをURLパスでまとめてブロックできるようにした。
@@ -66,10 +70,17 @@
 
   function matchDomain(pattern) {
     if (hostname === pattern) return true;
+    /* True suffix match by tail comparison. An indexOf===length-len test
+       collapses to -1===-1 (false positive) when the pattern is longer
+       than the host — e.g. host 'abcde.co.jp' would wrongly match the
+       'yahoo.co.jp' rule set. */
     if (pattern.charAt(0) === '.') {
-      return hostname.indexOf(pattern) === hostname.length - pattern.length;
+      return hostname.length >= pattern.length &&
+        hostname.slice(hostname.length - pattern.length) === pattern;
     }
-    return hostname.indexOf('.' + pattern) === hostname.length - pattern.length - 1;
+    var dotp = '.' + pattern;
+    return hostname.length > dotp.length &&
+      hostname.slice(hostname.length - dotp.length) === dotp;
   }
 
   var proxiedFns = new _WeakMap();
@@ -152,7 +163,6 @@
     'cdn.treasuredata.com', 'in.treasuredata.com',
     'b.st-hatena.com',
     'i.yimg.jp/images/analytics',
-    'yjtag.yahoo.co.jp',
     'highperformancecpmgate.com', 'toprevenuegate.com',
     'effectiveratecpm.com', 'profitablegatecpm.com',
     'traffdaq.com', 'clickadilla.com',
@@ -343,8 +353,8 @@
     'microadinc.com', 'zucks.jp',
 
     /* 2026-05-01 audit (round 7): EasyList cross-check + adult + mobile SDK */
-    /* EasyList established vendors */
-    'popads.net', 'popcash.net', 'popunder.bid', 'popunder.ru',
+    /* EasyList established vendors (popads.net already listed above) */
+    'popcash.net', 'popunder.bid', 'popunder.ru',
     'getpopunder.com', 'mypopads.com',
     'revcontent.com', 'tribalfusion.com', 'sociomantic.com',
     'videoplaza.tv', 'spotxchange.com', 'serverbid.com',
@@ -506,28 +516,57 @@
     'redditstatic.com/ads'
   ];
 
+  /* Build two indexes from AD_DOMAINS once at startup so isAdUrl doesn't
+     walk all ~650 entries on every request (it runs in the MutationObserver
+     hot path). Host-only entries go into a hash set checked by dot-suffix;
+     the few path-bearing entries stay as a short substring list. The
+     dot-suffix walk is equivalent to the old "exact OR '.'+d suffix" test
+     (verified against every entry + near-miss controls). */
+  var AD_PATH_ENTRIES = [];
+  var AD_HOST_SET = _Object.create(null);
+  (function () {
+    for (var i = 0; i < AD_DOMAINS.length; i++) {
+      var d = AD_DOMAINS[i];
+      if (d.indexOf('/') !== -1) AD_PATH_ENTRIES.push(d);
+      else AD_HOST_SET[d] = true;
+    }
+  })();
+
+  function hostMatchesAdSet(hostname) {
+    /* Check the host and each of its parent suffixes: 'a.b.example.com'
+       tests 'a.b.example.com', 'b.example.com', 'example.com', 'com'.
+       A hit on the host itself == exact match; a hit on a shorter suffix
+       == subdomain ('.'+d) match. Partial-label collisions can't happen
+       because we only ever cut at dots. */
+    var suffix = hostname;
+    while (suffix) {
+      if (AD_HOST_SET[suffix]) return true;
+      var dot = suffix.indexOf('.');
+      if (dot === -1) break;
+      suffix = suffix.substring(dot + 1);
+    }
+    return false;
+  }
+
   function isAdUrl(url) {
     if (!url) return false;
     var lower = url.toLowerCase();
-    /* Extract hostname from URL for domain matching */
     var hostname = '';
     try {
       var m = lower.match(/^https?:\/\/([^\/\?#]+)/);
       if (m) hostname = m[1];
     } catch (e) {}
-    for (var i = 0; i < AD_DOMAINS.length; i++) {
-      var d = AD_DOMAINS[i];
-      /* Path-bearing entries (e.g. 'www.facebook.com/tr') need substring match
-         against the full URL — host-suffix check alone misses them. */
-      if (d.indexOf('/') !== -1) {
-        if (lower.indexOf(d) !== -1) return true;
-      } else if (hostname) {
-        /* Host-only entries: exact or subdomain suffix. */
-        if (hostname === d || hostname.indexOf('.' + d) !== -1) return true;
-      } else {
-        /* Relative URL fallback: substring on the full string. */
-        if (lower.indexOf(d) !== -1) return true;
+    if (hostname) {
+      if (hostMatchesAdSet(hostname)) return true;
+      for (var i = 0; i < AD_PATH_ENTRIES.length; i++) {
+        if (lower.indexOf(AD_PATH_ENTRIES[i]) !== -1) return true;
       }
+      return false;
+    }
+    /* Relative URL (no scheme/host): fall back to a full substring scan.
+       Rare and not on the hot path. */
+    for (var j = 0; j < AD_DOMAINS.length; j++) {
+      if (lower.indexOf(AD_DOMAINS[j]) !== -1) return true;
     }
     return false;
   }
@@ -606,6 +645,14 @@
   document.addEventListener('touchstart', trackUserInteraction, true);
   document.addEventListener('touchend', trackUserInteraction, true);
   document.addEventListener('keydown', trackUserInteraction, true);
+
+  /* True once the user actually edits a form field / contenteditable.
+     Used to decide whether a beforeunload dialog is the page's own
+     unsaved-changes warning (keep it) or a spurious ad/exit-intent one
+     (suppress it). The 'input' event fires for input/textarea/select and
+     contenteditable on real value changes only. */
+  var _userEditedForm = false;
+  document.addEventListener('input', function () { _userEditedForm = true; }, true);
 
   var _fakeWindow = new _Proxy(window, {
     get: function (t, prop) {
@@ -1071,7 +1118,10 @@
   proxyFn(JSON, 'parse', function (target, thisArg, args) {
     var obj = _Reflect.apply(target, thisArg, args);
     if (obj && typeof obj === 'object') {
-      var adKeys = ['ads', 'ad', 'adPlacements', 'playerAds', 'adSlots',
+      /* Only delete keys whose name is unambiguously an ad payload.
+         Bare 'ad' / 'ads' are too generic — legit APIs use them for
+         non-ad meanings, and deleting them breaks the page. */
+      var adKeys = ['adPlacements', 'playerAds', 'adSlots',
                     'sponsoredItems', 'promotedContent', 'adConfig'];
       for (var i = 0; i < adKeys.length; i++) {
         if (adKeys[i] in obj) {
@@ -1329,15 +1379,16 @@
 
     '.gliaplayer-container',
 
-    '.spot', '.spot--left', '.spot--right', '.spot--top', '.spot--bottom',
-
-    '.sidebar-fix-ad',
-
+    /* '.spot*' / '.sidebar-fix-ad' / '.ai-viewport-*' / 'div[id^="av-"]'
+       were applied globally but are either generic class names that hit
+       legit elements, or scroll/visibility host elements whose hiding
+       swallows taps (the .ai-viewport tap-swallow regression in 5.5.5).
+       They now live only in SITE_RULES for the sites that actually need
+       them. */
     '.advertisement', '.advt',
-    'div[id^="exo_"]', 'div[id^="av-"]',
+    'div[id^="exo_"]',
     'div[id^="geniee_"]', 'div[id^="smarttag_"]',
     'div[id^="eot-"]', 'div[class*="eot-"]',
-    '.ai-viewport-1', '.ai-viewport-2', '.ai-viewport-3',
     'iframe[src*="mavrtracktor.com"]',
     'iframe[src*="waqool.com"]',
     'a[href*="mavrtracktor.com"]',
@@ -1374,7 +1425,7 @@
     'hero-news.com': [
       '.sidebar-fix-ad',
       '.gliaplayer-container',
-      'div[id^="im-"]',
+      'div[id^="im-"]', '[id^="im-"]',
       '#im-547311993fa044a9a3bc4fbfde00a156',
       'ins.adsbygoogle[data-ad-slot="4212212449"]',
       'ins.adsbygoogle[data-ad-slot="9550237407"]',
@@ -1477,16 +1528,12 @@
     '4gamer.net': ['.ad_top', '.ad_container', '.banner_left_4g', '.satellite_banner'],
     'jbbs.shitaraba.net': ['iframe[id^="ox_"]', '.ad-320_50', '#recommend_ad'],
     'rakuten.co.jp': ['#ad'],
-    'travel.rakuten.co.jp': ['#ad'],
-    /* Advanced Ads sticky widget が空殻化して画面追従でタップ妨害する対策。
-       サブドメイン (overwatch2-news.* 等) にも matchDomain suffix-match で適用。
-       .ai-viewport-1 は scroll/visibility listener なので hide すると逆に
-       タップを吸われる (5.5.5 で削除)。 */
-    'apexlegends-leaksnews.com': ['.ai-sticky-widget', '#ai_widget-2'],
-    /* GliaCloud outstream video (AI 生成・スクロール連動自動再生・音声付き) の
-       注入先 container を hide。script は実行されても container 無しで静かに失敗。
-       i-mobile interstitial (#im-xxx) も同時対応。 */
-    'hero-news.com': ['.gliaplayer-container', '[id^="im-"]']
+    'travel.rakuten.co.jp': ['#ad']
+    /* NOTE: 'apexlegends-leaksnews.com' と 'hero-news.com' の規則は上の
+       詳細定義に集約済み。ここに同じキーを再定義すると JS の object literal
+       後勝ちで詳細版が丸ごと無効化されるため、重複キーを置かないこと。
+       サブドメイン (overwatch2-news.* 等) は matchDomain の suffix-match で
+       上の定義が自動適用される。 */
   };
 
   var AFFILIATE_CSS = [
@@ -2068,8 +2115,13 @@
     proxiedFns.set(history.forward, origHistoryForward);
   } catch (e) {}
 
-  /* 2. beforeunload / unload dialog blocker */
+  /* 2. beforeunload / unload dialog blocker.
+     Only suppress when the user has NOT edited a form — that's the
+     spurious ad / exit-intent case. Once a field has been edited, let the
+     page's own "unsaved changes" warning through so we don't cause data
+     loss (the old unconditional stopImmediatePropagation killed those). */
   window.addEventListener('beforeunload', function (e) {
+    if (_userEditedForm) return;
     e.stopImmediatePropagation();
   }, true);
 

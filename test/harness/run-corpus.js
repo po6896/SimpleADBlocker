@@ -222,9 +222,33 @@ async function collectMetrics(page, entry) {
       const nodes = Array.from(document.querySelectorAll(sel));
       return { selector: sel, total: nodes.length, visible: nodes.filter(visible).length };
     });
+    /* Tap-through check: a survivor can be "visible" yet have a foreign
+       element sitting on top of its center point, swallowing taps. This is
+       the failure mode the 5.5.5 regressions exhibited (an empty ad host
+       element covered the page). Only meaningful for in-viewport elements
+       — elementFromPoint can't see below the fold. */
+    function occluded(el) {
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) return false;
+      if (r.bottom <= 0 || r.right <= 0 ||
+          r.top >= window.innerHeight || r.left >= window.innerWidth) return false;
+      const cx = Math.min(Math.max(r.left + r.width / 2, 1), window.innerWidth - 1);
+      const cy = Math.min(Math.max(r.top + r.height / 2, 1), window.innerHeight - 1);
+      const top = document.elementFromPoint(cx, cy);
+      if (!top) return false;
+      /* Tappable when the topmost element is the survivor itself, a
+         descendant, or an ancestor wrapper. */
+      return !(top === el || el.contains(top) || top.contains(el));
+    }
     const surviveHits = (ent.must_survive || []).map((sel) => {
       const nodes = Array.from(document.querySelectorAll(sel));
-      return { selector: sel, total: nodes.length, visible: nodes.filter(visible).length };
+      const vis = nodes.filter(visible);
+      return {
+        selector: sel,
+        total: nodes.length,
+        visible: vis.length,
+        occluded: vis.filter(occluded).length,
+      };
     });
 
     const cls = (window.__slexCls && typeof window.__slexCls.value === 'number')
