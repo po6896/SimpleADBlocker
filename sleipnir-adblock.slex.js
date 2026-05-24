@@ -9,7 +9,10 @@
 // @icon            data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAA4PSURBVHhe7V1diCVHFc6jb0r6jklk+t4kbswmZs3GJLpoNEtUiAii+GBehCh5WAQxQR/yFNanFX3YB8EFH7xDFFciMoRFlkV0CGoWlTgk/ow/MYO6MQSJQyQ6wQevfNXdM91fVXef6q7q2327Pvggmb237r31nao659Sp6quuCggICBgN5tHs6DyanSzl2uw4vydgQJhfM7s+ETN+dCOant2YTLc2oviljcl0Yc94T71/Mj03j+LTwUB6iGREx6c2oun55kJbMor3N6LpRRjZ/OrZCf5OAZ4xn6w/0KngdTw0iFPzN87exN83wAEw/WIqTqdlXQQBv/3m6xeb60dr+Z1rbtDea8Voeh5Gyr8hwBLztdm1G5PpmY1JvKt1cgUh4qUb37H48ZE7Fs8cu2fxmztOLp6/+0PW/N0771Pvf+rmuxY/OnJctQsj4s8rpzLWc/BL+LcFVEAJDwcOU6vWqTohTCY2i+iDz97+fmUUF2ZvtzGIeXAga4CRgo6qEx6djhH+y9veo4mzDMIgYIDfve6t2nc1cDMYAgGOUzLVa511wMfXZosfzG5b/PzWE5oAfeL2sfcp4xTMDDCEa7kvRod5tP6xKm8eDhmm29/f+QGts/vOy7e+e/G9t9yk/aZDxnsIJblPRgE13UfTi3qnJMR0+pOb71788a4Pah07NGLWqjSEKN4eVT5hPokfLlvnMeJ/dsu7tE5cBdYawmR6Zj6bvYH7a2WQrvWbhh+uiFBrFUZ8HbGklfsI8WVkN7nvBg9McWXxPMK4547fq3XUKhM5hos3HNP6IjWCvZVKJKmNGe1HJuHcqk73UiJ38cR1R7S+SXlu8EuCiuv1H7b4/vrbGmfoVo2IcBDich+l3Brk/gIst2y9H8tab0tEPch3cH+pKGFIOYPU2cM+euGHYMrvS/aur0RW0bwkxLuD2FNQ4kfxNv8AxPVhypcRSwIcY+5DJMx6nUYuEx+x7xAzecsklkhsNnFfqgihjzNBuuZr0z4sOYjfnOZQsYfLgSmt+2R8S3D2HBA7jdy3yjHsS3RgCvWC+G6JHUbuY5U1XHaeANWy/MXCmi/ny1/6qiL/3cSSXMEma9IZ0jq9wheCtx/ElxHCZ5AYAWZUzKzc5yhGZW28I4n1i7l97OSFUE/GvPjA6394fnHloUe01zExuLQdxSje73wDyZTl66omb+g0if/CfR9X/yYxAgwyfTcx3unMH1D7+SQ+PFX+ooE6q8TPKDEC1BawBnDGWSvnwFTDxRzY2Akefz0l4oOvfONxkU9gyhGgxI41cwpO9mAqCut+PW3Ez1BnBBh02r4B0sW+lgJ1JIssDoWP/MUCi2wiPvDvp3+hvYaJzSPDDuIZ1q410jx/oXoXIQl/ocAi24j/5/d+RHudidhep1lg3/mmUXIu7/BDYHVjK+OyZRfig1gK9POM8WXWsDFgTTTFBK+/hl2Jn9EUFThzCDnmR7YveP3l7Fr8jFqWMIq3WUtrJAc1i2Ff349nLZPLEh+EQ+h8FkivWTloEGlI/uDAhMsUP6NWRNJmFjCN/rGXcZexD+KDTmcBHv3wNMPar7Mv4mfUZoHJdIu1FYHjfhxp4g8bO/smPmicBWxLyOZr6/fnG0DcH0Z/kX0UPyP2ZwoGYHsMncu8sPHAHzJm9ll8ELN1cRaId1jjUqgKX3L+wl7/IfsuPojDp0UDmC7E6WHe9IHzxx8wVg5B/IxaYki6ScSZP2w2cONj5JDEBxGyFw0g3mWtjeDLGHHxETc+Ng5NfBBOO5eO1UYDvPGDBrhh33zl698sdKIELz/2Za0dW/7tU5/lZo2Qiv+//f3Fa089rX7PS194bLH74U9q7/FNzgnM1+IHWfMCuN4PDXCjvtkE+9u/1tqxpcQApOKX4dUnL6rP4ff7oh4N1Jwj4PW/6+TPi6e+yH0mxl8+8WmtPRvWGUBb8fOAIbxw70e1tlxTTwrFe6x5Abz+owFu1CfRMU2BqZbbs2GVAbgUP8N//3qltdFKqPkBZeHgstd/jIg2QIdymzYsMwAf4ufh2wg0P6DsJJG6tTP3wq5r/uAotQWWEG5XSpMB+BYfgP/icznYuunO4jIQTc+y9gp8m9cPb7xda8wn0RFtsfetJ7R2pfwnidqF+BnaLl9VNJSLmR1B9RSO3AtxaRE35osIkVyhyWhqGue7hK8w0eAImvcFUEmaf2GXCaB/fOVr3B+NgaWE269iU/H3n/2tluTBMoKcBPwRW7SZvaqIhFDBAKJ4n7VX4Aigy2Pekg6TLhGvbf1Ua7+MTcUHrnzm89rr8mxi1E1mLwn5WQZaRjB9PMvBC7qMAOAFS4CRLTUCyXTaRnxAktCxNQLb2UtK3hjC3Q5FA0ie1nHwApw540Z8EVOfBBAV06sEdanhtuIDEgOwDW2RB+E2XJAPkmp3EXMOALd7cSO+KEGW6pXOFlU5ARfiAxIDUO1Y7m3w+11QMwDeE+DrXroyAGnsnw+TJP4CYEqwuBIfkBqAKb9QBR9+AN80hj0fMoBiEggXEnEjPihN/ebFlI4ojq1dig9IDcB2GZC2a0PNAKL4dNEA1uIH8y/oogbQpmPy75MuA0D2HtfiAzZC2cCHI6jtCnI2UD1/t2MDkDp0pvhYugwgNexDfMDGAKTfF0DkwO9vS706iK6TWcYMIA3pTCNCugz851fPFf7flfiAjQEgNyGFDwNAVpcM4FzRAKgQ1LcB2KR+TU6RrWMFuBQfGJIB1PsAHUcB0hFcldWzgWvxgYEbQPGgSNcGIF0TqxI60gSSVHzk9m0wJAPgu4b1PABlAn0eA7cp+zLF8jbtSMVH9S5y+zawMQAbVBl9U9YngsgAsHnAjbiidOS2hY342NWz9St8GYBNu1LyRdPaXgDAx8F8HAa1if3bwFZ8/JsvA7DJWwDSdm3I9wka6wJRKJB/kY+CUGnqtw2aiA/6MgDb38zvd0G+S9B4mSSXhPu4BFKa+m2KpuKDvgzAxgF0cb6BiZtc87ri3gfWXgGHB/MvdH0VnE3s3wRtxAd9GIBtm7x/4YJ4VF/BAMpuDOF0sOsNIWnqtwmk4r++8yej+KCtWHUGYLv2A1VRT1PWZgEzJA94Pnyh60hAmvq1hVR84NULl7TXZXRhAJjlEJ42iXSqkl5tiOruvK5aEihD+sTPwotd3QTeZDRIYCN+BlNqGbQ1ANcwGZQL8hNGKm8N4wc/uroWTpr6tUET8YGyRMsyDcDH2g+isLcwqHGRtCkCyMBXw7naFLKBaR10uaVb5mkvywB8ngwybAObHcAMXBnkwg+QpGzz4Pe7FD+DqWp4WQZg+i6uqKWAeReQ4cMPsHGIuPjDh/iAacrt2gAw8n2KD2rnAUwpYAb7AW2OiNmmfvOHO32JD5iqhrs0ABigr2k/I052FQZz3fqfgZ8GiksHuXEpbdOgWaf4FD8DnyTuwgAww/ke9Rl5CxhnP1lrI3hnEGy6DNikQbNDEU3F36fyrzrwcuPaAPDb8RmIOkyOrU8aL4iqCv8Y/HQw12nhMjYVvyy9O1bqR8LjPdH0n4HTwi6igToG8d2RbwUpTf+WIX1KWKE+wOdx8SC+O+KaWG379+rZCda4FnxhhK8r44L4bsm5f/ENoQw+MAq6LhIJ4rulcfTzOUAbsDPochYI4runNvrbPkqWU8OuZoEgvns6H/0ZODPY9vq4IL4fOh/9GUyzQNNnBwbx/RCP8fUy+jPwDWJNniAWxPdHnOTyMvozqIiA8gI2D5II4vsjqrd5htbuAHIBLhbBlCNxCIP4/mh+cnhN0UdTpA+TKjxLEDuFdUvBvy5cCuJ7Ihd8qC3faHaUtXMGk0MouVMYRhDEd0tDuVd9xY8LcIoYlEQFf//co9rfgvjNaPL6cbTPqeNXhqRsLN7Nfzj2niU1Ay8+9MjBfwfxmxFLLh/29D71M9QhEooKJP4ACCMI4jenVuljOu/fBfgBU6D0OFneMQziy8lXvaQs3vjVJfhEMShxCkEYQRBfTpPT19m6X4bUHyjcKwBKS8iC+DIaTvgmZV5drvtlSIpIi04h6OpY2dgJ8TWPH05fkyofX4Al8gMnQDywiH9QoJyl4q+t388aLB2m/QJQ6hMEFmle85fk8UsByzQZAVKWkhAxMKH2qLchiJ8huWhCXw6wZdnlc4iGSAwSrbADVNP+AMTPkBSU6o4hdq58lpcPmUjv8mUOh+L3cM2vQxodaCEiKA0Tx0Ls6fNRroTxXq+8fVukeYJCNVFGLAkoZOTOGBMx5ZtSu6n4O8YLHYcIvoIuI6x+rKEidlANxRwJo+l5DB7ux0FD3UhOBSUZsfaNxTfAWs/P8TsUHrt6JU/3XgWkD6gsHDbJE+Hiqi4LiIDg+2iJnQPGO71I7XaB5PSxHiqC6CCEQqtiCJnwZicvGfVYIpe6qbMMpLPBXOuQHDEjSApN+sha4RXjy6MZ9WVQ2cOScDEjziQiNTqEbCLy9zDcGuH3BpXY8Q1Mf6rApMRJzIjlAZ2LTuaOXybh2GHZKvXq88JH8emV8/BdInmEnZ5FZOLWEhgDZoau/QXMRAjjILoxe6cxCG+N1BAql4Y8USiJpAqutXvm2D3OjAJioz1k63AaCrWP/NmlxBGtSfzw6Bw8l0i2madn65aHMiLjiJkCDlmemDkgLEYy/xsMCe8rD9kqmHj180Hm7/uOxGGczk1bzj3gJmatMNo7AjZJcPd9VWLJK3FvQjQ9C6MMoi8ZKoqAELjlNDm5tOV4loCRbSpHbrL+QHDmBgJlGNHspCKcMQiYMk1CbamNl9zfMascvCcIHbDK+D9Zn8MnOubxRQAAAABJRU5ErkJggg==
 // @include         http://*
 // @include         https://*
-// @version         5.5.7
+// @version         5.7.1
+// @history         5.7.1 Added per-site hide rules for GameWith and Syosetu (Shousetsuka ni Narou), verified against the live DOM. GameWith's "ad-jack" takeover banner and header ad notices are covered; Syosetu's c-ad slots are covered. Game8 needed nothing new — its slots are plain Google Publisher Tag containers already caught by the global rules.
+// @history         5.7.0 Added an auto-update channel. The script pulls a small filter delta (filters.json) from the project's GitHub Pages so new ad hosts and hide selectors can ship between gallery releases without reinstalling — closing the gap against self-updating rivals. Every entry is validated (strings only, length-bounded, no braces so a selector can't inject CSS rules), cached for 6h, and any failed or blocked fetch is ignored so the bundled lists keep working on their own.
+// @history         5.6.0 Added safe no-op stubs for ad-display SDKs (Google Publisher Tag, AdSense, Amazon apstag, Prebid). Their requests are already blocked, so these stubs just stop the page's own code from throwing on the missing SDK or hanging on a bid callback that never fires — which also defeats SDK-presence anti-adblock checks. Queued callbacks are still executed so layout code inside them runs. Because the script runs after the page loads, this helps late / single-page-app / re-check access, not the first page load. It also prunes YouTube player-API ad metadata on the fetch path (response.json() bypasses the JSON.parse hook); strictly scoped to the youtubei endpoints, and the original response is kept untouched when there is no ad data or on any error. Finally, a hidden 'PR' / 'Sponsored' label is now treated as decoy and no longer hides content, cutting false removals.
 // @history         5.5.7 Indexed the ad-host list so the URL check no longer walks all ~650 entries on every request (it runs on every DOM change). The block decision is unchanged — verified identical against every entry plus near-miss controls. The beforeunload blocker now suppresses a dialog only when no form field has been edited, so a page's own unsaved-changes warning is preserved instead of being silently killed.
 // @history         5.5.6 Fixed a host-matching bug that could block or hide unrelated sites: the domain suffix check matched too broadly (a 'media.net' rule could catch 'media.network.example.com', and short names matched anywhere in the host), and a same-length hostname could pick up another site's hide rules. Stopped deleting the generic 'ad' / 'ads' keys from parsed JSON, which broke pages that use those names for non-ad data. Removed a few over-broad global hide selectors (including the .ai-viewport listeners that swallow taps) and merged duplicate per-site rule blocks that had silently disabled the fuller rule sets.
 // @history         5.5.5 Fixed two side effects from the recent updates. Taps were getting swallowed on apexlegends-leaksnews and its subdomains (overwatch2-news, etc.) because the Advanced Ads viewport listener was being hidden. The corocoro manga viewer went blank because a path block intended for one analytics vendor was also catching the site's own event endpoint.
@@ -26,6 +29,9 @@
 // @history         5.4.0 Empty ad shells and IAB-sized empty frames are now removed too, to keep layout from shifting.
 // @history         5.3.2 Added @icon metadata required by the gallery upload form.
 // @history         4.8.1 First gallery release.
+// @history:ja      5.7.1 GameWith と 小説家になろう(Syosetu) のサイト別非表示ルールを実DOM確認の上で追加。GameWith は「アドジャック」ジャック広告とヘッダ広告枠、Syosetu は c-ad 系の枠に対応。Game8 は広告枠が素の Google Publisher Tag コンテナで既存のグローバル規則で消えるため追加不要だった。
+// @history:ja      5.7.0 自動更新チャネルを追加。プロジェクトの GitHub Pages から小さなフィルタ差分(filters.json)を取得し、ギャラリー再公開や再インストール無しで新しい広告ホスト/非表示セレクタを配れるようにした(自動更新する競合との差を埋める)。各エントリは検証(文字列・長さ制限・波括弧不可=セレクタからCSS規則を注入できない)し6時間キャッシュ、取得失敗・遮断時は無視する(同梱リストだけで動作継続)。
+// @history:ja      5.6.0 広告表示SDK(Google Publisher Tag / AdSense / Amazon apstag / Prebid)の無害なダミー(no-op)を定義。これらの通信は既に遮断済みで、ダミーは「SDKが無いことでページ側コードが例外を出す/入札コールバック待ちで固まる」のを防ぐためのもの(SDK存在チェック型のアンチアドブロック回避にもなる)。キューに積まれたコールバックは実行するので、その中のレイアウト処理は走る。スクリプトはページ読み込み後に動くため、効くのは遅延読み込み・SPA遷移後・再チェック時で、初回読み込み分には効かない。YouTube のプレイヤーAPIに含まれる広告メタデータも fetch 経路で除去(response.json() は JSON.parse フックを通らないため)。youtubei エンドポイントに厳格スコープし、広告データが無い時やエラー時は元レスポンスをそのまま返す。あわせて、非表示の「PR」「Sponsored」ラベル(おとり)ではコンテンツを隠さないようにして誤除去を減らした。
 // @history:ja      5.5.7 広告ホスト判定を索引化し、リクエストごとに約650件を線形走査しないようにした(DOM変化のたびに走るパスのため)。判定結果は従来と同一(全エントリ+近接誤爆候補で一致を検証済み)。beforeunload の抑制を「フォーム未編集のときだけ」に変更し、入力済みのページではサイト本来の未保存警告を残すようにした。
 // @history:ja      5.5.6 無関係なサイトをブロック/非表示にしうるホスト判定の不具合を修正。ドメインの後方一致が緩すぎて('media.net' の規則が 'media.network.example.com' まで巻き込む、短い名前がホスト名の途中でも一致する)、また同じ文字数のホスト名が別サイト向けの非表示規則を拾うことがあった。解析後のJSONから汎用的な 'ad'/'ads' キーを消す処理をやめた(それらを広告以外の用途で使うページが壊れていた)。広すぎたグローバル非表示セレクタ(タップを吸う .ai-viewport 監視要素を含む)を一部除去し、詳細な個別サイト規則を黙って無効化していた重複定義を統合した。
 // @history:ja      5.5.5 最近の更新で出ていた不具合を2件修正。apexlegends-leaksnews 系(overwatch2-news等のサブドメイン含む)でAdvanced Adsのスクロール検出要素まで消してしまっていてタップが効かなくなる問題と、コロコロのマンガビューアが真っ白になる問題(別の解析ベンダー向けに入れたパスブロックがサイト自前のイベント送信先まで巻き込んでいた)を直した。
@@ -598,11 +604,59 @@
     return _Reflect.apply(target, thisArg, args);
   });
 
+  /* YouTube ships pre-roll / mid-roll ad metadata inside its player-API
+     JSON. response.json() decodes natively and bypasses our JSON.parse
+     hook, so we prune those ad keys on the fetch path as well. Strictly
+     scoped: only the youtubei player/next endpoints, only when an ad key
+     is actually present (otherwise the original response is returned
+     untouched), and any parse/build failure falls back to the original —
+     so a non-YouTube API is never altered. This is the same target uBO /
+     AdGuard prune with json-prune-fetch-response. */
+  var YT_AD_KEYS = ['adPlacements', 'playerAds', 'adSlots',
+                    'playerAdParams', 'adBreakHeartbeatParams', 'adParams',
+                    'adServingData'];
+  function isJsonPruneUrl(u) {
+    if (!u) return false;
+    var l = u.toLowerCase();
+    return l.indexOf('/youtubei/v1/player') !== -1 ||
+           l.indexOf('/youtubei/v1/next') !== -1 ||
+           l.indexOf('/youtubei/v1/reel/reel_item_watch') !== -1 ||
+           l.indexOf('/get_video_info') !== -1;
+  }
+  function pruneYtAdKeys(obj) {
+    if (!obj || typeof obj !== 'object') return false;
+    var hit = false;
+    for (var i = 0; i < YT_AD_KEYS.length; i++) {
+      if (YT_AD_KEYS[i] in obj) {
+        try { delete obj[YT_AD_KEYS[i]]; hit = true; } catch (e) {}
+      }
+    }
+    return hit;
+  }
+
   if (window.fetch && _Response) {
     proxyFn(window, 'fetch', function (target, thisArg, args) {
       var url = (typeof args[0] === 'string') ? args[0] : (args[0] && args[0].url) || '';
       if (isAdUrl(url)) {
         return _Promise.resolve(new _Response('', { status: 200, statusText: 'OK' }));
+      }
+      if (isJsonPruneUrl(url)) {
+        return _Reflect.apply(target, thisArg, args).then(function (resp) {
+          try {
+            return resp.clone().json().then(function (obj) {
+              if (!pruneYtAdKeys(obj)) return resp;
+              var forged = new _Response(JSON.stringify(obj),
+                { status: resp.status, statusText: resp.statusText, headers: resp.headers });
+              try {
+                _defineProperty(forged, 'url', { value: resp.url });
+                _defineProperty(forged, 'ok', { value: resp.ok });
+                _defineProperty(forged, 'type', { value: resp.type });
+                _defineProperty(forged, 'redirected', { value: resp.redirected });
+              } catch (e) {}
+              return forged;
+            })['catch'](function () { return resp; });
+          } catch (e) { return resp; }
+        });
       }
       return _Reflect.apply(target, thisArg, args);
     });
@@ -1115,6 +1169,98 @@
     window.yjtag = noopFn;
   }
 
+  /* Ad-display SDK surrogates (googletag / adsbygoogle / apstag / pbjs).
+     The SDK URLs are blocked at the network layer, so these globals never
+     load. Define safe no-op stubs so the page's own inline code doesn't
+     throw 'googletag is not defined' — which also defeats SDK-presence
+     anti-adblock checks — and doesn't wedge on a bid callback that never
+     fires. Queued cmd/que callbacks are RUN (not dropped) so layout code
+     inside them still executes; getters return [], builders return this.
+     Idempotent via a _sab marker. Mirrors uBO/AdGuard redirect surrogates,
+     adapted for post-DOMContentLoaded injection (effective for late /
+     SPA / anti-adblock-recheck access only — initial inline use is already
+     past by the time we run). */
+  if (!window.googletag || !window.googletag._sab) {
+    var _gptSlot = {
+      addService: noopReturnThis, setTargeting: noopReturnThis,
+      setCategoryExclusion: noopReturnThis, setCollapseEmptyDiv: noopReturnThis,
+      defineSizeMapping: noopReturnThis, addSize: noopReturnThis,
+      build: noopReturnThis, set: noopReturnThis, updateTargetingFromMap: noopReturnThis,
+      getSlotElementId: function () { return ''; }, getAdUnitPath: function () { return ''; },
+      getTargeting: noopArr, getTargetingKeys: noopArr, getCategoryExclusions: noopArr,
+      getResponseInformation: function () { return null; }
+    };
+    var _gptPubads = {
+      enableSingleRequest: noopReturnThis, enableAsyncRendering: noopReturnThis,
+      enableServices: noopFn, disableInitialLoad: noopFn, collapseEmptyDivs: noopReturnThis,
+      refresh: noopFn, setTargeting: noopReturnThis, clearTargeting: noopReturnThis,
+      set: noopReturnThis, addEventListener: noopReturnThis, removeEventListener: noopReturnThis,
+      getSlots: noopArr, setCentering: noopFn, updateCorrelator: noopReturnThis,
+      setPrivacySettings: noopReturnThis, setRequestNonPersonalizedAds: noopReturnThis,
+      getTargeting: noopArr, getTargetingKeys: noopArr, definePassback: function () { return _gptSlot; }
+    };
+    var _existingCmd = (window.googletag && window.googletag.cmd) || [];
+    var _gt = {
+      _sab: true, apiReady: true, pubadsReady: true,
+      cmd: { push: function (f) { try { if (typeof f === 'function') f(); } catch (e) {} return 1; } },
+      pubads: function () { return _gptPubads; },
+      companionAds: function () { return { addEventListener: noopReturnThis, setSettings: noopFn }; },
+      content: function () { return { addEventListener: noopReturnThis, setContent: noopFn }; },
+      defineSlot: function () { return _gptSlot; },
+      defineOutOfPageSlot: function () { return _gptSlot; },
+      sizeMapping: function () { return { addSize: noopReturnThis, build: noopArr }; },
+      enableServices: noopFn, display: noopFn, destroySlots: function () { return true; },
+      setAdIframeTitle: noopFn, setConfig: noopFn, getVersion: function () { return ''; }
+    };
+    if (_existingCmd && _existingCmd.length) {
+      for (var _gi = 0; _gi < _existingCmd.length; _gi++) {
+        try { if (typeof _existingCmd[_gi] === 'function') _existingCmd[_gi](); } catch (e) {}
+      }
+    }
+    window.googletag = _gt;
+  }
+
+  if (!window.adsbygoogle || !window.adsbygoogle._sab) {
+    var _abg = { _sab: true, loaded: true };
+    _abg.push = function (arg) {
+      /* AdSense config / Auto-ads pushes an object whose function props are
+         callbacks; run them so the page's config code doesn't hang. */
+      try {
+        if (arg && typeof arg === 'object') {
+          for (var k in arg) {
+            if (typeof arg[k] === 'function') { try { arg[k].call(this, {}); } catch (e) {} }
+          }
+        }
+      } catch (e) {}
+      return 1;
+    };
+    window.adsbygoogle = _abg;
+  }
+
+  if (!window.apstag || !window.apstag._sab) {
+    window.apstag = {
+      _sab: true, init: noopFn, setDisplayBids: noopFn, targetingKeys: noopArr,
+      fetchBids: function (cfg, cb) { if (typeof cb === 'function') { try { cb([]); } catch (e) {} } },
+      renderImp: noopFn, _Q: []
+    };
+  }
+
+  if (!window.pbjs || !window.pbjs._sab) {
+    var _pbCmd = { push: function (f) { try { if (typeof f === 'function') f(); } catch (e) {} return 1; } };
+    window.pbjs = {
+      _sab: true, que: _pbCmd, cmd: _pbCmd,
+      addAdUnits: noopFn, removeAdUnit: noopFn, setConfig: noopFn, setBidderConfig: noopFn,
+      requestBids: function (arg) {
+        if (arg && typeof arg.bidsBackHandler === 'function') {
+          try { arg.bidsBackHandler({}, false); } catch (e) {}
+        }
+      },
+      getHighestCpmBids: noopArr, getBidResponses: function () { return {}; },
+      getAdserverTargeting: function () { return {}; }, enableAnalytics: noopFn,
+      aliasBidder: noopFn, getEvents: noopArr, onEvent: noopFn, offEvent: noopFn
+    };
+  }
+
   proxyFn(JSON, 'parse', function (target, thisArg, args) {
     var obj = _Reflect.apply(target, thisArg, args);
     if (obj && typeof obj === 'object') {
@@ -1528,7 +1674,15 @@
     '4gamer.net': ['.ad_top', '.ad_container', '.banner_left_4g', '.satellite_banner'],
     'jbbs.shitaraba.net': ['iframe[id^="ox_"]', '.ad-320_50', '#recommend_ad'],
     'rakuten.co.jp': ['#ad'],
-    'travel.rakuten.co.jp': ['#ad']
+    'travel.rakuten.co.jp': ['#ad'],
+    /* gamewith.jp: ジャック広告と固有ヘッダ広告枠 (矩形/記事中は GPT /
+       adsbygoogle のグローバル規則でカバー済み)。実DOMで存在確認 (2026-05-24)。 */
+    'gamewith.jp': ['#ad-jack', '.gwt-ad-jack', '.home-header-ad-notice-wrapper',
+      '.gdb-header-ad-notice', '.js-gamewith-top-adjack-follow-area',
+      '.gamedb-steam-ad-compact'],
+    /* syosetu.com (小説家になろう, ncode.* もサブドメイン suffix で適用):
+       BEM の c-ad 系。広告専用命名で誤爆リスク低。実DOMで存在確認 (2026-05-24)。 */
+    'syosetu.com': ['.c-ad', '[class^="c-ad--"]']
     /* NOTE: 'apexlegends-leaksnews.com' と 'hero-news.com' の規則は上の
        詳細定義に集約済み。ここに同じキーを再定義すると JS の object literal
        後勝ちで詳細版が丸ごと無効化されるため、重複キーを置かないこと。
@@ -1699,11 +1853,25 @@
     killAdSizedEmpties();
   }
 
+  function _markerVisible(el) {
+    /* A "PR"/"Sponsored" marker that is itself hidden (display:none /
+       visibility:hidden / opacity:0 / font-size:0) is almost always decoy
+       or leftover text, not a live ad label. Acting on it risks hiding
+       real content. Only treat visible markers as ad labels. */
+    try {
+      var cs = _origGetComputedStyle.call(window, el);
+      if (cs.display === 'none' || cs.visibility === 'hidden' ||
+          parseFloat(cs.opacity) === 0 || parseInt(cs.fontSize, 10) === 0) return false;
+    } catch (e) {}
+    return true;
+  }
+
   function cleanPRLabels() {
     $('span, label, small').each(function () {
       var text = $.trim($(this).text());
       if (!text || text.length > 20) return;
       if (PR_TEXT_RE.test(text)) {
+        if (!_markerVisible(this)) return;
         var $p = $(this).closest('article, li, [class*="ad"], [class*="sponsor"], [class*="pr-"]');
         if ($p.length && $p[0].tagName !== 'BODY') $p.css('display', 'none');
       }
@@ -2449,6 +2617,76 @@
     } catch (e) {}
   }
 
+  /* Remote filter delta (auto-update channel).
+     Fetches a small JSON from our own GitHub Pages so new ad hosts /
+     selectors can ship between gallery releases without users
+     reinstalling — the gap vs. self-updating competitors. Hardened:
+       - own HTTPS origin, cached in sessionStorage (6h TTL)
+       - every entry validated (string, length-bounded, no '{' '}' so a
+         css_hide value can't inject CSS declarations — SLEX_addStyle only
+         ever appends our own '{display:none}')
+       - hosts feed the same index isAdUrl uses; selectors are hidden
+       - ANY fetch/parse failure is swallowed: the bundled lists already
+         provide full functionality, so a dead/blocked endpoint never
+         degrades blocking (unlike external-script-dependent rivals). */
+  var REMOTE_URL = 'https://po6896.github.io/SimpleADBlocker/filters.json';
+  var RCACHE_KEY = '_sab_rf';
+  var RCACHE_TS_KEY = '_sab_rt';
+
+  function applyRemoteFilters(data) {
+    if (!data || typeof data !== 'object') return;
+    try {
+      var doms = data.ad_domains;
+      if (doms && doms.length) {
+        for (var i = 0; i < doms.length && i < 4000; i++) {
+          var d = doms[i];
+          if (typeof d !== 'string') continue;
+          d = d.toLowerCase().replace(/^\s+|\s+$/g, '');
+          if (!d || d.length > 100 || d.indexOf('{') !== -1 || d.indexOf(' ') !== -1) continue;
+          if (d.indexOf('/') !== -1) AD_PATH_ENTRIES.push(d);
+          else AD_HOST_SET[d] = true;
+        }
+      }
+      var sels = data.css_hide;
+      if (sels && sels.length) {
+        var clean = [];
+        for (var j = 0; j < sels.length && j < 4000; j++) {
+          var s = sels[j];
+          if (typeof s !== 'string') continue;
+          s = s.replace(/^\s+|\s+$/g, '');
+          if (!s || s.length > 200 || s.indexOf('{') !== -1 || s.indexOf('}') !== -1) continue;
+          clean.push(s);
+        }
+        if (clean.length) SLEX_addStyle(clean.join(',') + hideDecl);
+      }
+    } catch (e) {}
+  }
+
+  function loadRemoteFilters() {
+    var now = _Date_now();
+    try {
+      var cached = sessionStorage.getItem(RCACHE_KEY);
+      var ts = parseInt(sessionStorage.getItem(RCACHE_TS_KEY), 10);
+      if (cached && ts && (now - ts) < CACHE_TTL) {
+        applyRemoteFilters(JSON.parse(cached));
+        return;
+      }
+    } catch (e) {}
+    try {
+      var resp = SLEX_httpGet(REMOTE_URL);
+      if (resp) {
+        var data = JSON.parse(resp);
+        if (data && typeof data === 'object') {
+          applyRemoteFilters(data);
+          try {
+            sessionStorage.setItem(RCACHE_KEY, resp);
+            sessionStorage.setItem(RCACHE_TS_KEY, String(now));
+          } catch (e) {}
+        }
+      }
+    } catch (e) {}
+  }
+
   if (tryAntennaRedirect()) return;
   removeAdIframes();
   createDecoys();
@@ -2476,6 +2714,7 @@
   _setTimeout(function () { heuristicScan(); killAdSizedEmpties(); }, 30000);
 
   _setTimeout(loadExternalFilters, 2000);
+  _setTimeout(loadRemoteFilters, 2500);
 
   void 0;
 

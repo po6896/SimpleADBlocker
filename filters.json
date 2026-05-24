@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "updated": "2026-05-24",
+  "_note": "Live filter delta for SimpleADBlocker, served from GitHub Pages. 'ad_domains' are added to the in-page block index (network-level); 'css_hide' selectors get {display:none !important}. Entries are validated client-side (strings only, length-bounded, no braces). If this file cannot be fetched, the slex's bundled lists stay fully active — nothing here is required for the blocker to work.",
+  "ad_domains": [
+    "yieldlab.net",
+    "smartclip.net",
+    "adup-tech.com",
+    "scaleout.jp",
+    "fout.jp"
+  ],
+  "css_hide": []
+}
