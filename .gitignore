@@ -15,3 +15,6 @@ test/corpus/baseline.json
 test/corpus/candidates.md
 test/manual-checklist.md
 scripts/har-refresh.log
+
+# Android test harness (large/third-party artifacts)
+test/android/
