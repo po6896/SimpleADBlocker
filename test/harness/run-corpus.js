@@ -32,6 +32,10 @@ const { formatResult, summarize } = require('./log-result');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const SLEX = path.join(ROOT, 'sleipnir-adblock.slex.js');
+const EASYLIST_TEXT = (() => {
+  try { return fs.readFileSync(path.join(ROOT, 'scripts', 'easylist.txt'), 'utf8'); }
+  catch (e) { return ''; }
+})();
 const CORPUS_PATH = path.join(ROOT, 'test', 'corpus', 'targets.yaml');
 const BASELINE_PATH = path.join(ROOT, 'test', 'corpus', 'baseline.json');
 const HAR_DIR = path.join(ROOT, 'test', 'corpus', 'har');
@@ -372,7 +376,7 @@ async function runPass(browser, entry, reportDir, passName, passOpts) {
 async function installBlockerWithRetry(page, consoleLog) {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      await installBlocker(page, SLEX);
+      await installBlocker(page, SLEX, { easylistText: EASYLIST_TEXT });
       return;
     } catch (e) {
       if (!/Execution context was destroyed/i.test(String(e.message))) throw e;

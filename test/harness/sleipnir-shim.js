@@ -137,6 +137,18 @@ function installSlexPolyfills() {
     return s;
   };
 
+  /* Synchronous fetch used by loadExternalFilters/loadRemoteFilters. Tests
+     inject the list bodies via window globals; when absent we return '' so
+     the slex falls back to its bundled lists (matches real prod behaviour
+     when the endpoint is unreachable). */
+  window.SLEX_httpGet = function (url) {
+    try {
+      if (url && url.indexOf('easylist') !== -1) return window.__SAB_EASYLIST__ || '';
+      if (url && url.indexOf('filters.json') !== -1) return window.__SAB_FILTERS__ || '';
+    } catch (_) { /* best-effort */ }
+    return '';
+  };
+
   window.SLEX_xmlhttpRequest = function (details) {
     const init = {
       method: details.method || 'GET',
@@ -200,7 +212,7 @@ function evalSlexBody(src) {
  * @param {boolean} [opts.faithfulEval=true] strip newlines before eval
  */
 async function installBlocker(page, slexPath, opts = {}) {
-  const { faithfulEval = true } = opts;
+  const { faithfulEval = true, easylistText = '' } = opts;
   const { body } = splitUserScript(slexPath);
   const sloppy = dropUseStrict(body);
   const code = faithfulEval ? stripNewlines(sloppy) : sloppy;
@@ -208,6 +220,9 @@ async function installBlocker(page, slexPath, opts = {}) {
   await page.addScriptTag({ content: jqueryText() });
   await page.evaluate(unfreezeDocumentHotMethods);
   await page.evaluate(installSlexPolyfills);
+  if (easylistText) {
+    await page.evaluate((t) => { window.__SAB_EASYLIST__ = t; }, easylistText);
+  }
   await page.evaluate(evalSlexBody, code);
 }
 
