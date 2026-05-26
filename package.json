@@ -1,6 +1,6 @@
 {
   "name": "simple-adblocker",
-  "version": "5.8.2",
+  "version": "5.8.3",
   "private": true,
   "description": "Sleipnir Mobile ad blocker userscript - test harness",
   "scripts": {
