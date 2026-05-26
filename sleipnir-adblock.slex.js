@@ -9,7 +9,8 @@
 // @icon            data:image/png;base64,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
 // @include         http://*
 // @include         https://*
-// @version         5.8.1
+// @version         5.8.2
+// @history         5.8.2 External code-review fixes. isAdUrl now parses with new URL() (port/userinfo/IPv6/relative-safe; ~8x slower than the old regex but 0.38us/call, no scroll/interaction lag on a real Sleipnir build). window.open same-site test uses endsWith instead of slice(-2) (fixes the co.jp false-merge). EasyList cache now persists net hosts independently of the cosmetic-selector count; adservice.google. -> explicit hosts (was a dead suffix rule); filters.json selectors reject body/html/*/comma. Side effects reduced: dropped the broad global CSS (#ad/.ads/.sponsored/code-block/div[class*=ad] .banner; kept specific names like #ad-banner and data-ad-slot); JSON.parse ad-key stripping is now YouTube-host-only and player-key-only (generic sponsoredItems/promotedContent/adConfig removed); removed the popstate/history.go/history.forward interception that broke SPA and normal back/forward (pushState/replaceState ad-URL guard kept); removed the attachShadow closed->open coercion (shadow ad monitoring kept); Cookie cleanup no longer deletes consent/functional cookies (OptanonConsent/hubspotutk/_mkto_trk/bcookie/HubSpot/LinkedIn). Corpus 10/10 PASS; on-device scroll / link navigation / back / forward all verified on the emulator.
 // @history         5.8.1 Added GameWith's PR / tie-up article tile (.gdb-feature_tile-item.is-pr) to the per-site hide rules; it was missed when the other GameWith ad slots were covered in 5.7.1. Verified on the live page (Chromium harness): the PR tile is hidden while every normal article tile stays (PR visible 1->0, normal 8->8), so no content is swallowed. GameWith-only rule, no effect on the corpus sites.
 // @history         5.8.0 The EasyList fetch now also ingests its network domain rules (||host^), not only the cosmetic hide selectors it already pulled. Plain ||host^ entries — no options, exceptions, or wildcards — feed the same AD_HOST_SET index the bundled list uses; previously domain blocking relied on the bundled list alone while only the cosmetics auto-updated. Ingested hosts are cached in sessionStorage next to the cosmetic cache and restored on cache hits, so a re-visit within the 6h window keeps them instead of falling back to the bundled list. Corpus replay stays 10/10 with no content regressions; the per-corpus block increment is small because the existing pattern set already catches most ad requests — the value is automatic tracking of new hosts, which HAR replay cannot measure.
 // @history         5.7.1 Added per-site hide rules for GameWith and Syosetu (Shousetsuka ni Narou), verified against the live DOM. GameWith's "ad-jack" takeover banner and header ad notices are covered; Syosetu's c-ad slots are covered. Game8 needed nothing new — its slots are plain Google Publisher Tag containers already caught by the global rules.
@@ -31,6 +32,7 @@
 // @history         5.4.0 Empty ad shells and IAB-sized empty frames are now removed too, to keep layout from shifting.
 // @history         5.3.2 Added @icon metadata required by the gallery upload form.
 // @history         4.8.1 First gallery release.
+// @history:ja      5.8.2 外部コードレビュー対応。isAdUrl を new URL() ベース化(ポート/userinfo/IPv6/相対URL対応。旧正規表現比 約8倍遅いが 0.38us/call で実機スクロール・操作の遅延なし)。window.open の同一サイト判定を slice(-2) から endsWith 化(co.jp 誤併合を修正)。EasyList キャッシュをネットホスト独立保存に修正、adservice.google. を実host明示(死にルールだった)、filters.json は body/html/*/カンマのセレクタを弾く。副作用を低減: 広すぎたグローバルCSS(#ad/.ads/.sponsored/code-block 等)を削除(#ad-banner 等の具体名と data-ad-slot は維持)、JSON.parse の広告キー削除を YouTube限定+playerキー限定化(汎用 sponsoredItems/promotedContent/adConfig を除去)、SPA と通常の戻る/進むを壊していた popstate/history.go/history.forward 介入を撤去(pushState/replaceState の広告URL判定は維持)、attachShadow の closed→open 強制を撤去、Cookie削除から同意/機能cookie(OptanonConsent/hubspotutk/_mkto_trk/bcookie/HubSpot/LinkedIn系)を除外。corpus 10/10、実機でスクロール/リンク遷移/戻る/進むを確認。
 // @history:ja      5.8.1 GameWith のPR(タイアップ広告)記事タイル(.gdb-feature_tile-item.is-pr)をサイト別非表示ルールに追加。5.7.1 で他のGameWith広告枠を対応した際に漏れていた分。実ページで検証(Chromiumハーネス): PR枠は消え、正規記事タイルは全て残る(PR表示 1->0、正規 8->8)ため本文巻き込みなし。GameWith 限定ルールで corpus サイトには無影響。
 // @history:ja      5.8.0 EasyList の取得時に、要素非表示セレクタ(##)だけでなくネットワーク遮断ルール(||host^)も取り込むようにした。オプション・例外・ワイルドカードのない素の ||host^ を、同梱リストと同じ AD_HOST_SET 索引に追加する(従来ドメイン遮断は同梱リスト依存で、自動更新されるのは非表示セレクタだけだった)。取り込んだホストは cosmetic キャッシュと並べて sessionStorage に6hキャッシュし、再訪時に復元するので同梱リストへ戻らない。corpus replay は 10/10 維持・本文巻き込みなし。corpus 上のブロック増分は小さい(既存パターンが大半を捕捉済みのため)が、本来価値は新ホストの自動追従で、これは HAR replay では測れない。
 // @history:ja      5.7.1 GameWith と 小説家になろう(Syosetu) のサイト別非表示ルールを実DOM確認の上で追加。GameWith は「アドジャック」ジャック広告とヘッダ広告枠、Syosetu は c-ad 系の枠に対応。Game8 は広告枠が素の Google Publisher Tag コンテナで既存のグローバル規則で消えるため追加不要だった。
@@ -125,7 +127,7 @@
 
   var AD_DOMAINS = [
     'googlesyndication.com', 'doubleclick.net', 'googleadservices.com',
-    'adservice.google.', 'pagead2.googlesyndication.com',
+    'adservice.google.com', 'adservice.google.co.jp', 'pagead2.googlesyndication.com',
     'google-analytics.com', 'googletagmanager.com',
     'www.googletagmanager.com', 'tagmanager.google.com',
     'ssl.google-analytics.com', 'www.google-analytics.com',
@@ -563,8 +565,10 @@
     var lower = url.toLowerCase();
     var hostname = '';
     try {
-      var m = lower.match(/^https?:\/\/([^\/\?#]+)/);
-      if (m) hostname = m[1];
+      var u = new URL(String(url), location.href);
+      if (u.protocol === 'http:' || u.protocol === 'https:') {
+        hostname = u.hostname.toLowerCase().replace(/\.$/, '');
+      }
     } catch (e) {}
     if (hostname) {
       if (hostMatchesAdSet(hostname)) return true;
@@ -749,14 +753,14 @@
     /* Block if: trying to open a different domain (likely ad/popunder) */
     if (url && url.indexOf('http') === 0) {
       try {
-        var openHost = new URL(url).hostname;
-        if (openHost !== hostname) {
-          /* Allow same parent domain (e.g. sub.example.com -> example.com) */
-          var parts1 = hostname.split('.');
-          var parts2 = openHost.split('.');
-          var base1 = parts1.slice(-2).join('.');
-          var base2 = parts2.slice(-2).join('.');
-          if (base1 !== base2) return _fakeWindow;
+        var openHost = new URL(url).hostname.toLowerCase().replace(/\.$/, '');
+        var selfHost = hostname.toLowerCase().replace(/\.$/, '');
+        if (openHost !== selfHost) {
+          /* Same-or-parent only (sub.example.com <-> example.com). Avoids the
+             slice(-2) 'co.jp' bug that treated foo.co.jp / bar.co.jp as same. */
+          if (!(openHost.endsWith('.' + selfHost) || selfHost.endsWith('.' + openHost))) {
+            return _fakeWindow;
+          }
         }
       } catch (e) {}
     }
@@ -912,9 +916,10 @@
     var origAttachShadow = Element.prototype.attachShadow;
     Element.prototype.attachShadow = new _Proxy(origAttachShadow, {
       apply: function (target, thisArg, args) {
-        if (args[0] && args[0].mode === 'closed') {
-          args[0] = _Object.assign({}, args[0], { mode: 'open' });
-        }
+        /* closed→open の強制書き換えは撤去 (v5.8.2): Web Components の隠蔽
+           契約を壊しライブラリ検出にも引っかかる。closed でも attachShadow
+           の戻り値経由でこの override が shadowRoot を得て広告 iframe を
+           監視できるので、書き換えなしでも内部スキャンは維持される。 */
         var shadowRoot = _Reflect.apply(target, thisArg, args);
         /* Monitor shadow root for ad injection */
         if (_MutationObserver && shadowRoot) {
@@ -1265,14 +1270,15 @@
     };
   }
 
+  var _ytHost = /(^|\.)(youtube\.com|youtube-nocookie\.com)$/.test(hostname);
   proxyFn(JSON, 'parse', function (target, thisArg, args) {
     var obj = _Reflect.apply(target, thisArg, args);
-    if (obj && typeof obj === 'object') {
-      /* Only delete keys whose name is unambiguously an ad payload.
-         Bare 'ad' / 'ads' are too generic — legit APIs use them for
-         non-ad meanings, and deleting them breaks the page. */
-      var adKeys = ['adPlacements', 'playerAds', 'adSlots',
-                    'sponsoredItems', 'promotedContent', 'adConfig'];
+    /* YouTube only. Scoped to YT hosts so other sites' JSON is never
+       mutated, and limited to player-API ad keys (the generic
+       'sponsoredItems'/'promotedContent'/'adConfig' were dropped — they
+       have non-ad meanings on other sites and silently broke responses). */
+    if (_ytHost && obj && typeof obj === 'object') {
+      var adKeys = ['adPlacements', 'playerAds', 'adSlots'];
       for (var i = 0; i < adKeys.length; i++) {
         if (adKeys[i] in obj) {
           try { delete obj[adKeys[i]]; } catch (e) {}
@@ -1349,7 +1355,7 @@
        相当の context で Playwright 経由アクセス時)。全体を try/catch で防御し、
        失敗時は静かに諦める。 */
     try {
-      var trackingPatterns = /^(_ga|_gid|_gat|_gat_|__utm|_gcl|_gl|FPLC|FPID|_fbp|_fbc|_fbq|fr|datr|sb|wd|IDE|DSID|MUID|_uetsid|_uetvid|ANONCHK|NID|1P_JAR|__gads|__gpi|__gfp_64b|_rdt_uuid|_pin_unauth|_tt_enable_cookie|_ttp|mp_|_hp2_|_hj|_clck|_clsk|ajs_|_mkto_trk|hubspotutk|__hssc|__hssrc|__hstc|_omappvp|_omappvs|OptanonConsent|li_sugr|bcookie|AnalyticsSyncHistory|UserMatchHistory)/;
+      var trackingPatterns = /^(_ga|_gid|_gat|_gat_|__utm|_gcl|_gl|FPLC|FPID|_fbp|_fbc|_fbq|fr|datr|sb|wd|IDE|DSID|MUID|_uetsid|_uetvid|ANONCHK|NID|1P_JAR|__gads|__gpi|__gfp_64b|_rdt_uuid|_pin_unauth|_tt_enable_cookie|_ttp|mp_|_hp2_|_hj|_clck|_clsk|ajs_|_omappvp|_omappvs)/;
       var cookies = document.cookie.split(';');
       for (var i = 0; i < cookies.length; i++) {
         var pos = cookies[i].indexOf('=');
@@ -1395,7 +1401,6 @@
     '._popIn_recommend_article_ad', '._popIn_recommend_ad_section_articles',
     '.mgid_3x2', '.mgid-wrapper',
 
-    '#ad', '#ads', '#AD',
     '#ad-area', '#ad-banner', '#ad-box', '#ad-container',
     '#ad-frame', '#ad-header', '#ad-footer', '#ad-slot',
     '#adArea', '#adBottom', '#adBox', '#adContainer',
@@ -1424,7 +1429,6 @@
     '#PR-area', '#pr_area', '#prBox',
     '#googleAD', '#topAD', '#footerAD', '#upliftsquare',
 
-    '.ads', '.Ads', '.ADS',
     '.ad-area', '.ad-banner', '.ad-block', '.ad-body', '.ad-box',
     '.ad-container', '.ad-footer', '.ad-frame', '.ad-header',
     '.ad-holder', '.ad-label', '.ad-placement', '.ad-slot',
@@ -1466,11 +1470,11 @@
     '.sponsoredResults', '.sponsored-results', '.sponsored_result',
     '.content_ad', '.contentad', '.content-ad', '.contentAd',
     '.content-ad-container', '.content-ads', '.contentAds',
-    '.revcontent-wrap', '.sponsored', '.sponsor_link',
+    '.revcontent-wrap', '.sponsor_link',
 
     '.ad-rectangle-banner', '.ad-banner-top', '.ad-banner-bottom',
     '.bnrBb', '.bnSuper',
-    'div[class*="ad"] .banner', 'aside .banner',
+    'aside .banner',
 
     '.pub_300x250', '.pub_300x250m', '.pub_728x90',
     '.ads300x250', '.ad_300x250', '.ad_320x100',
@@ -1523,7 +1527,6 @@
 
     '.ai_widget', '.ai-sticky-widget',
     'div[data-ai]', 'span[data-ai-block]',
-    'div[class*="code-block"]',
 
     'div[id^="bnc_ad_"]',
 
@@ -2249,43 +2252,12 @@
   });
   proxiedFns.set(history.replaceState, realReplaceState);
 
-  /* Block popstate hijacking:
-     Sites add popstate listener that does history.go(1) or location.replace
-     to prevent the user from going back. We neuter these. */
-  var origAddEventListener = EventTarget.prototype.addEventListener;
-  EventTarget.prototype.addEventListener = new _Proxy(origAddEventListener, {
-    apply: function (target, thisArg, args) {
-      var type = args[0];
-      var handler = args[1];
-      if (type === 'popstate' && thisArg === window && handler) {
-        var handlerStr = '';
-        try { handlerStr = typeof handler === 'function' ? handler.toString() : ''; } catch (e) {}
-        if (/history\.(go|forward|pushState)|location\.(href|replace|assign)|window\.location/i.test(handlerStr)) {
-          return;
-        }
-      }
-      return _Reflect.apply(target, thisArg, args);
-    }
-  });
-  proxiedFns.set(EventTarget.prototype.addEventListener, origAddEventListener);
-
-  /* Block history.forward() and history.go(1) called by ads */
-  try {
-    var origHistoryGo = history.go;
-    history.go = new _Proxy(origHistoryGo, {
-      apply: function (target, thisArg, args) {
-        if (args[0] > 0) return;
-        return _Reflect.apply(target, thisArg, args);
-      }
-    });
-    proxiedFns.set(history.go, origHistoryGo);
-  } catch (e) {}
-
-  try {
-    var origHistoryForward = history.forward;
-    history.forward = function () {};
-    proxiedFns.set(history.forward, origHistoryForward);
-  } catch (e) {}
+  /* popstate / history.go / history.forward の介入は撤去 (v5.8.2)。
+     EventTarget.addEventListener を全 popstate に被せると SPA ルーターの
+     戻る/進むを巻き込み、handler.toString() 判定も minify 済みコードで
+     不安定だった。history.forward/go(1) の無効化はユーザー本来の「進む」も
+     殺していた。広告由来の履歴汚染は上の pushState/replaceState の isAdUrl
+     判定と window.open ブロックでカバーする。 */
 
   /* 2. beforeunload / unload dialog blocker.
      Only suppress when the user has NOT edited a form — that's the
@@ -2637,15 +2609,13 @@
             sels.push(s);
           }
         }
-        if (sels.length > 0) {
-          var css = sels.slice(0, 3000).join(',');
-          try {
-            sessionStorage.setItem(CACHE_KEY, css);
-            sessionStorage.setItem(CACHE_TS_KEY, String(now));
-            sessionStorage.setItem(CACHE_NET_KEY, netHosts.join(','));
-          } catch (e) {}
-          SLEX_addStyle(css + hideDecl);
-        }
+        var css = sels.slice(0, 3000).join(',');
+        try {
+          sessionStorage.setItem(CACHE_TS_KEY, String(now));
+          if (css) sessionStorage.setItem(CACHE_KEY, css);
+          if (netHosts.length) sessionStorage.setItem(CACHE_NET_KEY, netHosts.join(','));
+        } catch (e) {}
+        if (css) SLEX_addStyle(css + hideDecl);
       }
     } catch (e) {}
   }
@@ -2688,6 +2658,8 @@
           if (typeof s !== 'string') continue;
           s = s.replace(/^\s+|\s+$/g, '');
           if (!s || s.length > 200 || s.indexOf('{') !== -1 || s.indexOf('}') !== -1) continue;
+          if (s.indexOf(',') !== -1) continue;
+          if (/^(html|body|\*)$/i.test(s)) continue;
           clean.push(s);
         }
         if (clean.length) SLEX_addStyle(clean.join(',') + hideDecl);
