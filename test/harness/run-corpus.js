@@ -236,6 +236,14 @@ async function collectMetrics(page, entry) {
       if (r.width === 0 || r.height === 0) return false;
       if (r.bottom <= 0 || r.right <= 0 ||
           r.top >= window.innerHeight || r.left >= window.innerWidth) return false;
+      /* Page-sized wrapper containers (taller than the viewport) are scrolled
+         through, not tapped as a unit, so a center-point tap-occlusion probe is
+         meaningless: after ad removal the layout reflows and the clamped center
+         lands on a foreign edge element (the site's own nav/footer or bottom ad
+         iframe), yielding a false "tap blocked". The 5.5.5 tap-swallow class the
+         probe guards against manifests on ad-tile-sized link survivors, which
+         stay viewport-or-smaller, so detection there is unaffected. */
+      if (r.height > window.innerHeight) return false;
       const cx = Math.min(Math.max(r.left + r.width / 2, 1), window.innerWidth - 1);
       const cy = Math.min(Math.max(r.top + r.height / 2, 1), window.innerHeight - 1);
       const top = document.elementFromPoint(cx, cy);
@@ -326,7 +334,35 @@ async function runPass(browser, entry, reportDir, passName, passOpts) {
     await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
     await page.waitForTimeout(2000);
 
-    metrics = await collectMetrics(page, entry);
+    try {
+      metrics = await collectMetrics(page, entry);
+    } catch (e) {
+      /* A late ad load (~10s post-load on some wikis) can tear down the
+         main-frame context mid page.evaluate. Retry once after the page
+         settles, mirroring installBlockerWithRetry, instead of letting it
+         propagate to runOne's catch and become a spurious ERROR verdict. */
+      const msg = String(e.message);
+      const destroyed = /Execution context was destroyed/i.test(msg);
+      /* Renderer OOM ("Target crashed") is retried only on the vanilla pass:
+         vanilla loads ALL ads (nothing blocked) so it is the pass that runs
+         out of memory under heavy live ad load. On the blocked pass a crash
+         could be a genuine slex-induced fault, so let it surface as ERROR
+         rather than masking it with a reload. */
+      const crashed = /Target crashed/i.test(msg) && !passOpts.installSlex;
+      if (!destroyed && !crashed) throw e;
+      consoleLog.push(`[collect-retry] ${msg}`);
+      if (crashed) {
+        /* The renderer process died; the page is dead until reloaded, so a
+           bare wait won't respawn it. Reload, re-scroll, then re-measure. */
+        await page.reload({ waitUntil: 'load', timeout: 60000 }).catch(() => {});
+        await autoScroll(page).catch((err) => consoleLog.push(`[scroll-retry] ${err.message}`));
+        await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
+      } else {
+        await page.waitForLoadState('load', { timeout: 15000 }).catch(() => {});
+      }
+      await page.waitForTimeout(1500);
+      metrics = await collectMetrics(page, entry);
+    }
     metrics.ads = { ...counters };
     metrics.adRequests = counters.issued; /* legacy alias */
     metrics.adSurvivors = counters.finished - counters.redirected;

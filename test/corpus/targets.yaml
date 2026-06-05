@@ -35,19 +35,27 @@ ads_present:
 
   - id: livedoor_news
     url: https://news.livedoor.com/
-    # Ad-heavy portal: Taboola / GAM / i-mobile / fluct が本文と同等量のテキストを
-    # 占有するため、正常動作時 text 比率 ~50% 前後になる。must_survive article link
-    # が残存するのを保証した上で text/images 閾値を緩和 (false-fail 回避)。
+    # Ad-heavy portal. Content preservation is guarded by must_survive (the
+    # /topics/detail/ article tiles, ~136 links) + text ratio. The image-count
+    # ratio is unreliable here: vanilla's <img> count is dominated by ad /
+    # recommendation thumbnails, so blocked/vanilla measures ad removal more
+    # than content loss (CI vanilla ~37 imgs vs blocked ~12 content imgs ≈ 0.32).
+    # images threshold lowered so it still catches a genuine content-image
+    # collapse (blocked dropping well below ~12) without false-failing on
+    # ad-thumbnail noise. NOTE: must_survive was previously a[href*="/article/"]
+    # which matched the /article/category/ nav links (not articles); those
+    # overlap the visible /topics/category/ nav, so the tap-occlusion check
+    # false-fired on the site's own layout. /topics/detail/ targets real tiles.
     body_min_ratio:
       text: 0.40
-      images: 0.40
+      images: 0.25
       scroll: 0.50
     must_be_blocked:
       - 'iframe[src*="doubleclick.net"]'
       - 'iframe[src*="googlesyndication"]'
       - '[id^="ad-"]'
     must_survive:
-      - 'a[href*="/article/"]'
+      - 'a[href*="/topics/detail/"]'
 
   # Swapped from ameblo (thin home + crashing article URL) to fc2 blog —
   # fc2 runs i-mobile / Yahoo ads heavily. Article pulled from Brave history.
