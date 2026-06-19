@@ -618,6 +618,16 @@ const AD_SERVER_PATTERNS = [
   /inner-active\.mobi\//,                 /* Fyber Inneractive */
   /flurry\.com\//,                        /* Flurry */
   /startapp\.com\//,                      /* StartApp */
+
+  /* 2026-06-20 audit (round 6 re-scan): job/EC/manga live scan.
+     content CDN (gigaviewer/k-img/mynvwm/imgix/st-hatena/yimg static) excluded. */
+  /ma-tag\.com\//,                        /* ma-tag tracking tag network (townwork) */
+  /pm-serv\.co\//,                        /* pm-serv ad serve + cookie-sync (mynavi_woman) */
+  /a-mpd\.com\//,                         /* a-mpd tracking pixel (rikunabi) */
+  /tk\.csolution\.jp\//,                  /* csolution adme tracking (rikunabi) */
+  /prismpartner\.smt\.docomo\.ne\.jp\//,  /* docomo ad partner mark (jalan) */
+  /www\.google\.com\/pagead\//,           /* Google Ads pagead conversion/userlist (.com) */
+  /www\.google\.co\.jp\/pagead\//,        /* Google Ads pagead (.co.jp, broadened) */
 ];
 
 function isAdUrl(url) {
