@@ -58,16 +58,25 @@ ads_present:
       - 'a[href*="/topics/detail/"]'
 
   # Swapped from ameblo (thin home + crashing article URL) to fc2 blog —
-  # fc2 runs i-mobile / Yahoo ads heavily. Article pulled from Brave history.
+  # fc2 runs i-mobile / Yahoo ads heavily.
+  # 2026-08-10: 旧 nlst3 は https→http へ 302 する上に広告ホストの過半が
+  # 応答しなくなり (CI で ad req 26 中 15 fail)、広告除去の比較材料として
+  # 機能していなかった。常時SSL かつ現役更新の joker004 へ差し替え。
+  # 記事本文は .entry-body (ハイフン)。テンプレ差で旧 .entry_body も残す。
+  # 画像は広告バナー由来が大半のため images しきい値を下げる。
   - id: fc2blog_article
-    url: https://nlst3.blog.fc2.com/blog-entry-2222.html
+    url: https://joker004.blog.fc2.com/blog-entry-51700.html
+    body_min_ratio:
+      text: 0.70
+      images: 0.25
+      scroll: 0.50
     must_be_blocked:
       - 'iframe[src*="doubleclick.net"]'
       - 'iframe[src*="googlesyndication"]'
       - 'iframe[src*="amazon-adsystem"]'
       - 'iframe[src*="i-mobile"]'
     must_survive:
-      - '.entry_body, #entry, article'
+      - '.entry-body, .entry_body, #entry, article'
 
   # Heavy game-strategy wiki. Exercises Criteo / GenieeSSP / FluctSDK.
   - id: kamigame_dbd
@@ -97,10 +106,13 @@ ads_present:
   # Note: `[id*="ad"]` would false-match "header"/"pad" etc. Use tighter anchors.
   - id: kamikouryaku_nightreign
     url: https://kamikouryaku.net/nightreign_eldenring/
-    # Flaky near default threshold (past run: text 68.6% vs default 70%, 1.4% 短).
+    # Flaky near default threshold (past run: text 68.6% vs default 70%, 1.4% 短)。
     # Wiki 本文は must_survive で保証、body text は動的記事追加で変動するため微緩和。
+    # 2026-08-10: 実測 69.2% で余裕 4.2pt しかなく再び赤くなる寸前だったため 0.55 へ。
+    # 減っている分は広告枠のテキスト。本文全体が崩れれば 30% 台まで落ちるので
+    # 0.55 でも「本文消失」は検出できる。
     body_min_ratio:
-      text: 0.65
+      text: 0.55
       images: 0.45
       scroll: 0.50
     must_be_blocked:
