@@ -59,17 +59,14 @@ ads_present:
 
   # Swapped from ameblo (thin home + crashing article URL) to fc2 blog —
   # fc2 runs i-mobile / Yahoo ads heavily.
-  # 2026-08-10: 旧 nlst3 は https→http へ 302 する上に広告ホストの過半が
-  # 応答しなくなり (CI で ad req 26 中 15 fail)、広告除去の比較材料として
-  # 機能していなかった。常時SSL かつ現役更新の joker004 へ差し替え。
-  # 記事本文は .entry-body (ハイフン)。テンプレ差で旧 .entry_body も残す。
-  # 画像は広告バナー由来が大半のため images しきい値を下げる。
+  # 既知の弱点 (2026-08-10 調査): このブログは https→http へ 302 し、広告
+  # ホストの過半が無応答 (CI で ad req 26 中 15 fail)。広告除去の比較材料
+  # としては弱い。差し替え候補の joker004 (常時SSL・現役) は日本からは
+  # 見えるが GitHub の米国ランナーからは FC2 が 403 を返すため不可。
+  # 海外IPで 403 にならない現役 fc2 ブログが見つかるまで現状維持。
+  # must_survive は fc2 テンプレ差 (.entry-body / .entry_body) を両対応。
   - id: fc2blog_article
-    url: https://joker004.blog.fc2.com/blog-entry-51700.html
-    body_min_ratio:
-      text: 0.70
-      images: 0.25
-      scroll: 0.50
+    url: https://nlst3.blog.fc2.com/blog-entry-2222.html
     must_be_blocked:
       - 'iframe[src*="doubleclick.net"]'
       - 'iframe[src*="googlesyndication"]'

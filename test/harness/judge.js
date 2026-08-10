@@ -15,6 +15,7 @@
 const MIN_AD_REQUESTS_FOR_CONCLUSIVE = 3;
 const DYNAMIC_BASELINE_RATIO = 0.85;
 const CLS_WARN = 0.1;
+const BROKEN_VANILLA_TEXT = 200;
 
 function isAdLikeSource(src) {
   const tag = (src.tag || '').toUpperCase();
@@ -37,6 +38,25 @@ function computeAdCls(clsEntries) {
 
 function judge(entry, vanilla, blocked, baseline) {
   const failures = [];
+
+  /* Vanilla pass sometimes renders nothing but a consent dialog — CI runners
+     are US-based, so JP sites serve the Google Funding Choices CCPA overlay
+     (.fc-ccpa-root) and the body never mounts. Every ratio and the occlusion
+     comparison then measure the dialog, not the site, which false-FAILs the
+     blocked pass (2026-08-10 kamigame_dbd: vanilla text 44 vs blocked 14219).
+     No baseline to fall back on means the run simply cannot be judged. */
+  if (!baseline && vanilla.text < BROKEN_VANILLA_TEXT
+      && blocked.text > vanilla.text * 2) {
+    return {
+      verdict: 'INCONCLUSIVE',
+      reasons: [
+        `vanilla body text = ${vanilla.text} chars (< ${BROKEN_VANILLA_TEXT}) ` +
+        `while blocked = ${blocked.text}; vanilla pass did not render`,
+      ],
+      failures: [], ratios: {}, warnings: [],
+      adRequests: { vanilla: vanilla.adRequests || 0, blocked: blocked.adRequests || 0 },
+    };
+  }
 
   for (const hit of blocked.blockedHits) {
     if (hit.visible > 0) {
