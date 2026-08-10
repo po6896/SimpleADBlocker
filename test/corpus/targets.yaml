@@ -121,7 +121,7 @@ ads_present:
       - 'iframe[src*="googlesyndication"]'
       - 'iframe[src*="amazon-adsystem"]'
     must_survive:
-      - 'a[href*="/news/articles/"]'
+      - 'a[href*="/news/article"]'
 
 ads_free:
   - id: mdn_home
